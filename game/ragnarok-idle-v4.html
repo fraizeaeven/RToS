@@ -1,0 +1,1972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ragnarok Idle — Skill & Attribute System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --parch:#f5edd8; --parch2:#ede0c4; --parch3:#e3d3aa;
+  --cream:#fdf8ef; --cream2:#f9f1e0;
+  --ink:#1e1610; --ink2:#3d2e1e; --ink3:#5c4835;
+  --dim:#7a6850; --dim2:#a89070;
+  --crimson:#8b1a1a; --crimson2:#c0392b; --crimson-l:#fde8e8;
+  --gold:#7a5500; --gold2:#a07000; --gold3:#c8900a; --gold-bg:#faf0c8;
+  --blue:#1a4070; --blue2:#1e5aa0; --blue-l:#e8f0fb;
+  --green:#155020; --green2:#237a38; --green-l:#e8f5ec;
+  --purple:#42186a; --purple2:#6b2dc0; --purple-l:#f3eeff;
+  --orange:#7a2e00; --orange2:#b84a0a; --orange-l:#fff0e0;
+  --teal:#0a5050; --teal2:#0d7070; --teal-l:#e0f5f5;
+  --panel:#faf5e8; --panel2:#f4ecd4;
+  --border:rgba(120,80,0,0.22); --border2:rgba(120,80,0,0.50);
+  --shadow:rgba(30,22,16,0.13); --shadow2:rgba(30,22,16,0.25);
+
+  --fs-title:28px; --fs-main:22px; --fs-sub:18px;
+  --fs-body:15px; --fs-info:13px; --fs-mono:14px;
+  --fs-label:12px; --fs-tiny:11px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--parch2);
+  color:var(--ink);font-family:'Crimson Pro',serif;line-height:1.5;user-select:none;}
+
+/* ── LAYOUT ── */
+#app{display:none;width:100%;height:100vh;
+  grid-template-columns:260px 1fr 310px;
+  grid-template-rows:52px 1fr;}
+#app.on{display:grid;}
+
+/* ── TOPBAR ── */
+#hdr{
+  grid-column:1/-1;height:52px;
+  background:linear-gradient(90deg,var(--parch3),var(--parch2) 30%,var(--cream) 50%,var(--parch2) 70%,var(--parch3));
+  border-bottom:2px solid var(--border2);
+  display:flex;align-items:center;box-shadow:0 2px 12px var(--shadow);z-index:20;
+}
+.hdr-logo{padding:0 16px;font-family:'Cinzel',serif;font-size:var(--fs-sub);font-weight:700;
+  color:var(--crimson);letter-spacing:2px;border-right:1px solid var(--border);white-space:nowrap;}
+.hdr-logo span{display:block;font-size:var(--fs-tiny);color:var(--gold2);letter-spacing:3px;font-weight:400;}
+.hdr-stats{flex:1;display:flex;height:100%;}
+.hs{padding:0 12px;display:flex;flex-direction:column;justify-content:center;
+  border-right:1px solid var(--border);cursor:default;transition:background .15s;}
+.hs:hover{background:rgba(120,80,0,.05);}
+.hs .hl{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);color:var(--dim);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:1px;}
+.hs .hv{font-family:'Share Tech Mono',monospace;font-size:var(--fs-mono);color:var(--ink2);}
+.hs .hv.cr{color:var(--crimson2);} .hs .hv.go{color:var(--gold2);}
+.hs .hv.bl{color:var(--blue2);} .hs .hv.gr{color:var(--green2);}
+.hs .hv.pu{color:var(--purple2);}
+.hdr-right{padding:0 14px;display:flex;align-items:center;gap:8px;}
+.loc-chip{padding:3px 12px;border:1px solid var(--border2);background:var(--gold-bg);
+  color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);letter-spacing:1px;}
+.notif-badge{
+  padding:2px 8px;border:1px solid var(--crimson);background:var(--crimson-l);
+  color:var(--crimson);font-family:'Cinzel',serif;font-size:var(--fs-tiny);
+  letter-spacing:1px;animation:badgePulse 1.5s ease-in-out infinite;display:none;
+}
+@keyframes badgePulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+
+/* ── LEFT PANEL ── */
+#left{background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:2px 0 8px var(--shadow);}
+.portrait{padding:12px 14px 10px;background:linear-gradient(160deg,var(--cream),var(--parch2));
+  border-bottom:1px solid var(--border);text-align:center;}
+.p-emoji{font-size:48px;display:block;margin-bottom:4px;
+  filter:drop-shadow(0 2px 4px var(--shadow2));animation:heroFloat 4s ease-in-out infinite;}
+@keyframes heroFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
+.p-name{font-family:'Cinzel',serif;font-size:var(--fs-main);color:var(--crimson);}
+.p-class{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--dim);
+  margin-top:2px;letter-spacing:1px;text-transform:uppercase;}
+.p-joblv{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--gold2);margin-top:1px;}
+
+/* Bars */
+.bars{padding:10px 13px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:7px;}
+.brow{display:flex;flex-direction:column;gap:2px;}
+.bhdr{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:var(--fs-label);}
+.bl{color:var(--dim);} .bv{color:var(--ink2);}
+.btrack{height:9px;background:rgba(30,22,16,.09);border:1px solid var(--border);border-radius:1px;overflow:hidden;}
+.bfill{height:100%;transition:width .3s ease;border-radius:1px;}
+.bfill.hp{background:linear-gradient(90deg,#7a1010,#c0392b);}
+.bfill.sp{background:linear-gradient(90deg,#1a3a6a,#2563a8);}
+.bfill.exp{background:linear-gradient(90deg,#1a4a20,#2d8a47);}
+.bfill.jexp{background:linear-gradient(90deg,#5a3a00,#a07000);}
+.bfill.wave{background:linear-gradient(90deg,#42186a,#6b2dc0);}
+
+/* ── STAT ALLOCATION PANEL ── */
+.stat-alloc{padding:10px 13px;border-bottom:1px solid var(--border);}
+.stat-alloc-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.sec-hdr{font-family:'Cinzel',serif;font-size:var(--fs-info);color:var(--gold);
+  letter-spacing:2px;text-transform:uppercase;}
+.stat-pts-badge{
+  font-family:'Cinzel',serif;font-size:var(--fs-info);
+  padding:2px 8px;border:1px solid var(--crimson);background:var(--crimson-l);color:var(--crimson);
+}
+.stat-rows{display:flex;flex-direction:column;gap:3px;}
+.stat-row{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 6px;background:rgba(255,255,255,.5);border:1px solid var(--border);
+}
+.stat-row .sicon{font-size:14px;width:20px;text-align:center;}
+.stat-row .sname{font-family:'Cinzel',serif;font-size:var(--fs-info);color:var(--ink2);width:40px;}
+.stat-row .sval{font-family:'Share Tech Mono',monospace;font-size:var(--fs-mono);
+  color:var(--gold2);font-weight:bold;width:32px;text-align:center;}
+.stat-row .sbonus{font-family:'Share Tech Mono',monospace;font-size:var(--fs-label);
+  color:var(--green2);flex:1;}
+.stat-btn{
+  width:24px;height:24px;border:1px solid var(--border2);background:var(--gold-bg);
+  color:var(--gold);font-size:16px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+  font-family:'Cinzel',serif;
+}
+.stat-btn:hover{background:rgba(192,144,10,.2);border-color:var(--gold2);}
+.stat-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+/* Equip */
+.equip-sec{padding:8px 13px;border-bottom:1px solid var(--border);}
+.eslot{display:flex;justify-content:space-between;align-items:center;
+  padding:4px 7px;margin-bottom:2px;
+  background:rgba(255,255,255,.5);border:1px solid var(--border);
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-mono);cursor:pointer;transition:all .2s;}
+.eslot:hover{border-color:var(--border2);}
+.et{color:var(--dim);font-size:var(--fs-label);width:30px;}
+.en{color:var(--ink2);flex:1;padding:0 5px;}
+.ea{color:var(--gold);font-size:var(--fs-label);}
+
+.bottom-stats{margin-top:auto;padding:8px 13px;border-top:1px solid var(--border);
+  display:grid;grid-template-columns:1fr 1fr;gap:3px;}
+.bstat{text-align:center;padding:5px 3px;background:rgba(255,255,255,.5);border:1px solid var(--border);}
+.bstat .bsl{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);color:var(--dim);letter-spacing:1px;display:block;margin-bottom:1px;}
+.bstat .bsv{font-family:'Cinzel',serif;font-size:var(--fs-sub);color:var(--gold);}
+
+/* ── CENTER ── */
+#center{display:flex;flex-direction:column;background:var(--cream);}
+#arena{flex:1;position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:crosshair;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 40%,rgba(255,248,220,.75) 0%,transparent 65%),
+    linear-gradient(180deg,var(--cream) 0%,var(--parch2) 100%);}
+#arena::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(120,80,0,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(120,80,0,.03) 1px,transparent 1px);
+  background-size:44px 44px;animation:gridScroll 22s linear infinite;}
+@keyframes gridScroll{from{background-position:0 0;}to{background-position:0 44px;}}
+.stage-label{position:absolute;top:10px;left:0;right:0;text-align:center;
+  font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--dim);letter-spacing:2px;}
+.boss-ring{position:absolute;width:160px;height:160px;border-radius:50%;pointer-events:none;
+  border:2px solid rgba(139,26,26,.35);animation:bossRing 2s ease-in-out infinite;display:none;}
+@keyframes bossRing{0%,100%{transform:scale(1);opacity:.4;}50%{transform:scale(1.1);opacity:.9;}}
+.enemy-wrap{text-align:center;position:relative;z-index:2;transition:transform .08s;}
+.enemy-wrap:active{transform:scale(.93);}
+.e-emoji{font-size:92px;display:block;filter:drop-shadow(0 4px 8px var(--shadow2));
+  animation:eFloat 3.5s ease-in-out infinite;}
+@keyframes eFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+.e-name{font-family:'Cinzel',serif;font-size:26px;color:var(--crimson);letter-spacing:2px;margin-top:8px;}
+.e-meta{font-family:'Share Tech Mono',monospace;font-size:var(--fs-body);color:var(--dim);margin-top:3px;}
+.e-hp-wrap{width:270px;margin-top:12px;}
+.e-hp-track{height:16px;background:rgba(30,22,16,.09);border:1px solid rgba(139,26,26,.4);
+  border-radius:1px;overflow:hidden;position:relative;}
+.e-hp-fill{height:100%;background:linear-gradient(90deg,#7a1010,#c0392b);transition:width .15s;}
+.e-hp-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55);}
+.tap-hint{position:absolute;bottom:14px;font-family:'Cinzel',serif;font-size:var(--fs-body);
+  color:var(--dim2);letter-spacing:2px;animation:hint 2.5s ease-in-out infinite;}
+@keyframes hint{0%,100%{opacity:.3;}50%{opacity:.8;}}
+.wave-banner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-size:var(--fs-title);color:var(--crimson);letter-spacing:5px;
+  opacity:0;pointer-events:none;z-index:50;background:rgba(245,237,216,.85);}
+.wave-banner.show{animation:bannerAnim 1.8s ease forwards;}
+@keyframes bannerAnim{0%{opacity:0;transform:scale(.6);}25%{opacity:1;transform:scale(1.05);}75%{opacity:1;}100%{opacity:0;transform:scale(1.1);}}
+.dmg-float{position:fixed;pointer-events:none;z-index:9990;
+  font-family:'Cinzel',serif;font-weight:700;animation:floatUp .9s ease forwards;}
+@keyframes floatUp{from{opacity:1;transform:translateY(0)scale(1);}to{opacity:0;transform:translateY(-75px)scale(.6);}}
+.df-click{font-size:24px;color:var(--crimson);}
+.df-crit {font-size:32px;color:var(--gold2);}
+.df-heal {font-size:20px;color:var(--green2);}
+.df-exp  {font-size:16px;color:var(--purple2);}
+.dps-bar{display:flex;align-items:center;justify-content:space-between;
+  padding:5px 14px;background:var(--parch2);border-top:1px solid var(--border);flex-wrap:wrap;gap:6px;}
+.ds{font-family:'Share Tech Mono',monospace;font-size:var(--fs-body);color:var(--dim);}
+.ds b{color:var(--ink2);} .ds.cr b{color:var(--crimson2);} .ds.gr b{color:var(--green2);}
+.ds.go b{color:var(--gold2);} .ds.pu b{color:var(--purple2);}
+#log{height:120px;overflow-y:auto;background:var(--cream2);border-top:1px solid var(--border);
+  padding:5px 12px;display:flex;flex-direction:column;gap:1px;}
+.lg{font-family:'Crimson Pro',serif;font-size:var(--fs-body);line-height:1.4;
+  padding:2px 0;border-bottom:1px solid rgba(30,22,16,.05);}
+.lg .ts{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);color:var(--dim2);margin-right:5px;}
+.lg.atk{color:var(--crimson);} .lg.ev{color:var(--green2);} .lg.loot{color:var(--gold2);}
+.lg.sys{color:var(--dim);} .lg.lvl{color:var(--purple2);font-family:'Cinzel',serif;}
+.lg.heal{color:var(--green);} .lg.boss{color:var(--orange2);font-family:'Cinzel',serif;}
+.lg.job{color:var(--crimson);font-family:'Cinzel',serif;font-size:var(--fs-sub);}
+.lg.stat{color:var(--teal2);}
+#cmd-bar{display:flex;align-items:center;gap:5px;padding:5px 10px;
+  background:var(--parch2);border-top:1px solid var(--border);}
+#cmd-in{flex:1;height:30px;padding:0 10px;background:rgba(255,255,255,.7);
+  border:1px solid var(--border);color:var(--ink);
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-body);outline:none;}
+#cmd-in:focus{border-color:var(--border2);}
+#cmd-in::placeholder{color:var(--dim2);}
+.cmd-btn{height:30px;padding:0 14px;background:var(--gold-bg);border:1px solid var(--border2);
+  color:var(--gold);font-family:'Cinzel',serif;font-size:var(--fs-body);cursor:pointer;transition:all .2s;}
+.cmd-btn:hover{background:rgba(192,144,10,.2);}
+
+/* ── RIGHT PANEL ── */
+#right{background:var(--panel);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;box-shadow:-2px 0 8px var(--shadow);}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--parch2);}
+.tab{flex:1;padding:11px 2px;text-align:center;font-family:'Cinzel',serif;
+  font-size:var(--fs-label);color:var(--dim);letter-spacing:.5px;text-transform:uppercase;
+  cursor:pointer;border-right:1px solid var(--border);transition:all .2s;position:relative;}
+.tab:last-child{border-right:none;}
+.tab:hover{color:var(--ink2);background:rgba(120,80,0,.06);}
+.tab.on{color:var(--crimson);background:rgba(139,26,26,.06);border-bottom:2px solid var(--crimson);}
+.tab .tbadge{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;
+  background:var(--crimson);display:none;}
+.tab .tbadge.show{display:block;}
+.tab-content{flex:1;overflow-y:auto;padding:10px;}
+
+/* ── SKILL TREE (Tab) ── */
+.sk-tree{display:flex;flex-direction:column;gap:6px;}
+.sk-category{margin-bottom:10px;}
+.sk-cat-hdr{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--gold);
+  letter-spacing:2px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);padding-bottom:3px;margin-bottom:6px;}
+.sk-pts-row{display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:8px;padding:5px 8px;background:var(--gold-bg);border:1px solid var(--border2);}
+.sk-pts-label{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--gold2);}
+.sk-pts-val{font-family:'Share Tech Mono',monospace;font-size:var(--fs-sub);
+  color:var(--crimson);font-weight:bold;}
+
+/* Individual skill card with unlock chain */
+.sk-node{
+  padding:10px 12px;margin-bottom:4px;
+  background:rgba(255,255,255,.6);border:1px solid var(--border);
+  transition:all .2s;position:relative;
+}
+.sk-node.learned{border-color:rgba(35,122,56,.5);background:var(--green-l);}
+.sk-node.available{border-color:rgba(30,90,160,.4);background:var(--blue-l);}
+.sk-node.locked{opacity:.4;filter:grayscale(.4);}
+.sk-node.maxed{border-color:var(--gold2);background:var(--gold-bg);}
+.sk-node-hdr{display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;}
+.sk-node-left{display:flex;align-items:start;gap:8px;}
+.sk-node-icon{font-size:24px;line-height:1;}
+.sk-node-info .sknm{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--ink2);}
+.sk-node-info .sktp{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);
+  color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:1px;}
+.sk-node-info .sklk{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);
+  color:var(--orange2);margin-top:1px;}
+.sk-lv-ctrl{display:flex;align-items:center;gap:5px;}
+.sk-lv-num{font-family:'Cinzel',serif;font-size:var(--fs-sub);color:var(--crimson);
+  min-width:50px;text-align:center;}
+.sk-lv-max{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--dim);}
+.sk-plus-btn{
+  width:28px;height:28px;border:1px solid var(--blue2);background:var(--blue-l);
+  color:var(--blue2);font-size:18px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.sk-plus-btn:hover{background:rgba(30,90,160,.15);}
+.sk-plus-btn:disabled{opacity:.3;cursor:not-allowed;border-color:var(--dim2);color:var(--dim);}
+
+/* Skill info box (RO wiki template style) */
+.sk-infobox{
+  background:var(--cream);border:1px solid var(--border);
+  margin-top:5px;font-size:var(--fs-info);
+}
+.sk-ib-row{display:flex;border-bottom:1px solid var(--border);}
+.sk-ib-row:last-child{border-bottom:none;}
+.sk-ib-key{
+  font-family:'Cinzel',serif;font-size:var(--fs-info);color:var(--ink3);
+  background:var(--parch2);padding:3px 8px;
+  border-right:1px solid var(--border);min-width:110px;white-space:nowrap;
+}
+.sk-ib-val{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);
+  color:var(--ink2);padding:3px 8px;flex:1;}
+.sk-ib-val.effect{font-family:'Crimson Pro',serif;font-size:var(--fs-body);color:var(--blue2);}
+.sk-ib-val.level-table{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);
+  color:var(--ink3);padding:4px 8px;display:flex;flex-wrap:wrap;gap:3px;}
+.lv-cell{padding:2px 5px;background:var(--parch2);border:1px solid var(--border);min-width:40px;text-align:center;}
+.lv-cell.cur{background:var(--crimson-l);border-color:var(--crimson);color:var(--crimson);}
+
+/* Unlock chain indicator */
+.sk-chain{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);
+  color:var(--purple2);margin-top:4px;display:flex;align-items:center;gap:4px;}
+.sk-chain::before{content:'↳';font-size:12px;}
+
+/* Passive indicator */
+.passive-glow{box-shadow:0 0 8px rgba(212,160,10,.25);}
+
+/* Substat display */
+.substats-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-top:4px;}
+.subst{display:flex;justify-content:space-between;padding:2px 5px;
+  background:rgba(255,255,255,.4);border:1px solid var(--border);
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);}
+.subst .sk{color:var(--dim);}
+.subst .sv{color:var(--ink2);}
+
+/* Map zone */
+.zone-card{padding:10px 12px;margin-bottom:5px;
+  background:rgba(255,255,255,.55);border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.zone-card:hover{border-color:var(--border2);}
+.zone-card.cur{border-color:rgba(35,122,56,.55);background:var(--green-l);}
+.zone-card.lk{opacity:.35;cursor:not-allowed;}
+.z-hdr{display:flex;justify-content:space-between;align-items:start;margin-bottom:3px;}
+.z-name{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--ink2);}
+.z-name.cur{color:var(--green2);}
+.z-badge{font-family:'Share Tech Mono',monospace;font-size:var(--fs-tiny);padding:2px 6px;border:1px solid;}
+.z-badge.cur{border-color:var(--green2);color:var(--green2);}
+.z-badge.lk{border-color:var(--crimson);color:var(--crimson);}
+.z-badge.ok{border-color:var(--dim2);color:var(--dim);}
+.z-country{font-family:'Cinzel',serif;font-size:var(--fs-info);color:var(--gold2);margin-bottom:2px;}
+.z-desc{font-size:var(--fs-body);color:var(--dim);}
+.z-mults{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--gold2);margin-top:3px;}
+.z-monsters{font-size:var(--fs-info);color:var(--blue2);margin-top:3px;line-height:1.6;}
+
+/* Upgrades */
+.upg-card{padding:9px 11px;margin-bottom:4px;background:rgba(255,255,255,.55);
+  border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.upg-card:hover{border-color:var(--border2);}
+.upg-card.buy{border-color:rgba(35,122,56,.4);background:var(--green-l);}
+.upg-card.mx{opacity:.38;cursor:not-allowed;}
+.u-hdr{display:flex;justify-content:space-between;}
+.u-name{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--ink2);}
+.u-lv{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--dim);}
+.u-desc{font-size:var(--fs-body);color:var(--dim);margin:2px 0;}
+.u-cost{font-family:'Share Tech Mono',monospace;font-size:var(--fs-body);color:var(--gold2);}
+
+/* Heroes */
+.hero-card{padding:9px 11px;margin-bottom:4px;background:rgba(255,255,255,.55);
+  border:1px solid var(--border);transition:all .2s;}
+.hero-card.unlocked{border-color:rgba(30,90,160,.35);background:var(--blue-l);}
+.hero-card.locked{opacity:.38;}
+.h-top{display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;}
+.h-name{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--ink2);}
+.h-sub{font-size:var(--fs-info);color:var(--dim);margin-top:1px;}
+.h-dps{font-family:'Share Tech Mono',monospace;font-size:var(--fs-body);color:var(--blue2);}
+.h-lv{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--dim);}
+.h-bar-track{height:5px;background:rgba(30,22,16,.1);border:1px solid var(--border);overflow:hidden;margin-top:3px;}
+.h-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue2),#4a9eff);transition:width .3s;}
+.hire-btn{width:100%;margin-top:6px;padding:5px;background:rgba(255,255,255,.6);
+  border:1px solid var(--border2);color:var(--blue2);font-family:'Cinzel',serif;
+  font-size:var(--fs-body);cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.hire-btn:hover{background:var(--blue-l);}
+.hire-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* Modals */
+#prestige-modal{position:fixed;inset:0;background:rgba(245,237,216,.9);
+  display:none;align-items:center;justify-content:center;z-index:9900;}
+#prestige-modal.show{display:flex;}
+.pmodal{background:var(--cream);border:2px solid var(--border2);
+  padding:28px;width:400px;text-align:center;box-shadow:0 8px 40px var(--shadow2);}
+.pmodal h2{font-family:'Cinzel',serif;color:var(--crimson);font-size:var(--fs-title);
+  letter-spacing:3px;margin-bottom:10px;}
+.pmodal p{font-size:var(--fs-body);color:var(--ink3);margin-bottom:6px;}
+.pmodal .pw{font-family:'Cinzel',serif;color:var(--gold);font-size:var(--fs-sub);}
+.modal-btns{display:flex;gap:10px;margin-top:18px;}
+.modal-btn{flex:1;padding:12px;border:1px solid;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:var(--fs-body);letter-spacing:1px;transition:all .2s;}
+.modal-btn.ok{border-color:var(--crimson);background:var(--crimson-l);color:var(--crimson);}
+.modal-btn.ok:hover{background:rgba(139,26,26,.15);}
+.modal-btn.no{border-color:var(--dim2);background:transparent;color:var(--dim);}
+
+/* TITLE */
+#title{position:fixed;inset:0;
+  background:linear-gradient(160deg,var(--parch3) 0%,var(--cream) 50%,var(--parch2) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;z-index:9999;}
+.title-ornament{font-size:30px;color:var(--dim2);letter-spacing:8px;}
+.t-logo{text-align:center;padding:16px 40px;border:2px solid var(--border2);
+  background:rgba(255,255,255,.4);box-shadow:0 4px 20px var(--shadow);}
+.t-logo h1{font-family:'Cinzel',serif;font-size:var(--fs-title);font-weight:700;
+  color:var(--crimson);letter-spacing:6px;}
+.t-logo h2{font-family:'Cinzel',serif;font-size:var(--fs-sub);font-weight:400;
+  color:var(--gold);letter-spacing:5px;margin-top:4px;}
+.t-logo .t-sub{font-family:'Share Tech Mono',monospace;font-size:var(--fs-body);
+  color:var(--dim);letter-spacing:3px;margin-top:6px;}
+.t-form{display:flex;flex-direction:column;gap:12px;width:350px;}
+.t-lbl{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--dim);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.t-inp{width:100%;padding:10px 12px;background:rgba(255,255,255,.7);
+  border:1px solid var(--border2);color:var(--ink);
+  font-family:'Share Tech Mono',monospace;font-size:var(--fs-body);outline:none;}
+.t-inp:focus{border-color:var(--crimson);}
+.class-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.c-opt{padding:9px 4px;border:1px solid var(--border);background:rgba(255,255,255,.5);
+  cursor:pointer;text-align:center;transition:all .2s;}
+.c-opt:hover,.c-opt.on{border-color:var(--border2);background:var(--gold-bg);}
+.c-opt .ce{font-size:24px;display:block;margin-bottom:3px;}
+.c-opt .cn{font-family:'Cinzel',serif;font-size:var(--fs-body);color:var(--ink2);}
+.c-opt .cd{font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--dim);margin-top:1px;}
+.t-start{width:100%;padding:14px;background:var(--crimson-l);border:2px solid var(--crimson);
+  color:var(--crimson);font-family:'Cinzel',serif;font-size:var(--fs-sub);font-weight:700;
+  cursor:pointer;letter-spacing:4px;text-transform:uppercase;transition:all .3s;}
+.t-start:hover{background:rgba(139,26,26,.14);}
+
+#toast{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);
+  background:var(--cream);border:1px solid var(--border2);
+  padding:8px 22px;font-family:'Cinzel',serif;font-size:var(--fs-body);
+  color:var(--crimson);opacity:0;pointer-events:none;z-index:9998;transition:opacity .25s;
+  box-shadow:0 4px 16px var(--shadow2);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--parch2);}
+::-webkit-scrollbar-thumb{background:var(--dim2);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ TITLE ═══ -->
+<div id="title">
+  <div class="title-ornament">✦ ✦ ✦</div>
+  <div class="t-logo">
+    <h1>RAGNAROK</h1>
+    <h2>IDLE CHRONICLES</h2>
+    <div class="t-sub">ATTRIBUTE SYSTEM · SKILL TREE · IDLE CLICKER</div>
+  </div>
+  <div class="t-form">
+    <div>
+      <div class="t-lbl">Character Name</div>
+      <input class="t-inp" id="iName" placeholder="Enter name..." maxlength="20">
+    </div>
+    <div>
+      <div class="t-lbl">Starting Class</div>
+      <div class="class-grid" id="classGrid">
+        <div class="c-opt on" data-job="Swordsman"><span class="ce">⚔️</span><span class="cn">Swordsman</span><span class="cd">STR·VIT</span></div>
+        <div class="c-opt" data-job="Mage">        <span class="ce">🔮</span><span class="cn">Mage</span>       <span class="cd">INT·DEX</span></div>
+        <div class="c-opt" data-job="Archer">      <span class="ce">🏹</span><span class="cn">Archer</span>    <span class="cd">DEX·AGI</span></div>
+        <div class="c-opt" data-job="Acolyte">     <span class="ce">✨</span><span class="cn">Acolyte</span>   <span class="cd">INT·VIT</span></div>
+        <div class="c-opt" data-job="Thief">       <span class="ce">🗡️</span><span class="cn">Thief</span>     <span class="cd">AGI·LUK</span></div>
+        <div class="c-opt" data-job="Merchant">    <span class="ce">💰</span><span class="cn">Merchant</span>  <span class="cd">STR·VIT</span></div>
+      </div>
+    </div>
+    <button class="t-start" onclick="startGame()">✦ Begin Your Legend ✦</button>
+  </div>
+</div>
+
+<!-- ═══ GAME ═══ -->
+<div id="app">
+  <div id="hdr">
+    <div class="hdr-logo">RAGNAROK<span>IDLE CHRONICLES</span></div>
+    <div class="hdr-stats">
+      <div class="hs"><div class="hl">Base Lv</div><div class="hv go" id="h-lv">1</div></div>
+      <div class="hs"><div class="hl">Job Lv</div><div class="hv cr" id="h-jlv">1</div></div>
+      <div class="hs"><div class="hl">HP</div><div class="hv cr" id="h-hp">100</div></div>
+      <div class="hs"><div class="hl">ATK</div><div class="hv go" id="h-atk">0</div></div>
+      <div class="hs"><div class="hl">MATK</div><div class="hv pu" id="h-matk">0</div></div>
+      <div class="hs"><div class="hl">Auto DPS</div><div class="hv bl" id="h-dps">0</div></div>
+      <div class="hs"><div class="hl">Attr Pts</div><div class="hv cr" id="h-apts">0</div></div>
+      <div class="hs"><div class="hl">Skill Pts</div><div class="hv pu" id="h-spts">0</div></div>
+      <div class="hs"><div class="hl">Wave</div><div class="hv" id="h-wave">1</div></div>
+    </div>
+    <div class="hdr-right">
+      <div class="loc-chip" id="h-loc">PRONTERA FIELD</div>
+      <div class="notif-badge" id="notif-attr">ATTR !</div>
+      <div class="notif-badge" id="notif-skill">SKILL !</div>
+    </div>
+  </div>
+
+  <!-- LEFT -->
+  <div id="left">
+    <div class="portrait">
+      <span class="p-emoji" id="p-emoji">⚔️</span>
+      <div class="p-name"  id="p-name">—</div>
+      <div class="p-class" id="p-class">—</div>
+      <div class="p-joblv" id="p-joblv">—</div>
+    </div>
+
+    <div class="bars">
+      <div class="brow">
+        <div class="bhdr"><span class="bl">HP</span><span class="bv"><span id="b-hpv">100</span>/<span id="b-hpm">100</span></span></div>
+        <div class="btrack"><div class="bfill hp" id="b-hp" style="width:100%"></div></div>
+      </div>
+      <div class="brow">
+        <div class="bhdr"><span class="bl">SP</span><span class="bv"><span id="b-spv">50</span>/<span id="b-spm">50</span></span></div>
+        <div class="btrack"><div class="bfill sp" id="b-sp" style="width:100%"></div></div>
+      </div>
+      <div class="brow">
+        <div class="bhdr"><span class="bl">Base EXP</span><span class="bv"><span id="b-expv">0</span>/<span id="b-expm">100</span></span></div>
+        <div class="btrack"><div class="bfill exp" id="b-exp" style="width:0%"></div></div>
+      </div>
+      <div class="brow">
+        <div class="bhdr"><span class="bl">Job EXP</span><span class="bv"><span id="b-jexpv">0</span>/<span id="b-jexpm">100</span></span></div>
+        <div class="btrack"><div class="bfill jexp" id="b-jexp" style="width:0%"></div></div>
+      </div>
+      <div class="brow">
+        <div class="bhdr"><span class="bl">Wave</span><span class="bv"><span id="b-wkills">0</span>/<span id="b-wgoal">5</span></span></div>
+        <div class="btrack"><div class="bfill wave" id="b-wave" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- STAT ALLOCATION -->
+    <div class="stat-alloc">
+      <div class="stat-alloc-hdr">
+        <div class="sec-hdr">Attributes</div>
+        <div class="stat-pts-badge" id="attr-pts-badge">0 pts</div>
+      </div>
+      <div class="stat-rows" id="stat-rows"></div>
+    </div>
+
+    <div class="equip-sec">
+      <div class="sec-hdr">Equipment</div>
+      <div class="eslot"><span class="et">WPN</span><span class="en" id="eq-wpn">Unarmed</span><span class="ea" id="eq-wpna"></span></div>
+      <div class="eslot"><span class="et">ARM</span><span class="en" id="eq-arm">None</span><span class="ea" id="eq-arma"></span></div>
+    </div>
+
+    <div class="bottom-stats">
+      <div class="bstat"><span class="bsl">ZENY</span><span class="bsv" id="bs-zeny">0</span></div>
+      <div class="bstat"><span class="bsl">CRIT%</span><span class="bsv" id="bs-crit">5%</span></div>
+      <div class="bstat"><span class="bsl">DEF</span><span class="bsv" id="bs-def">0</span></div>
+      <div class="bstat"><span class="bsl">FLEE</span><span class="bsv" id="bs-flee">0</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <div id="arena" onclick="clickAtk(event)">
+      <div class="stage-label" id="stage-lbl">PRONTERA FIELD — WAVE 1</div>
+      <div class="boss-ring" id="boss-ring"></div>
+      <div class="enemy-wrap">
+        <span class="e-emoji" id="e-emoji">🟣</span>
+        <div class="e-name"  id="e-name">Poring</div>
+        <div class="e-meta"  id="e-meta">Lv.1 · Water</div>
+        <div class="e-hp-wrap">
+          <div class="e-hp-track">
+            <div class="e-hp-fill" id="e-hp-fill" style="width:100%"></div>
+            <div class="e-hp-txt"  id="e-hp-txt">10/10</div>
+          </div>
+        </div>
+      </div>
+      <div class="wave-banner" id="wave-banner">✦ Wave Cleared! ✦</div>
+      <div class="tap-hint">✦ Tap to Strike ✦</div>
+    </div>
+    <div class="dps-bar">
+      <span class="ds">AUTO <b id="d-dps">0</b>/s</span>
+      <span class="ds gr">REGEN <b id="d-regen">+1</b>/s</span>
+      <span class="ds go">ATK <b id="d-atk">0</b></span>
+      <span class="ds cr">E.ATK <b id="d-eatk">0</b></span>
+      <span class="ds pu">MATK <b id="d-matk">0</b></span>
+    </div>
+    <div id="log"></div>
+    <div id="cmd-bar">
+      <input id="cmd-in" placeholder="use potion · go prontera field · sell · status · help…" autocomplete="off">
+      <button class="cmd-btn" onclick="sendCmd()">Execute</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right">
+    <div class="tabs">
+      <div class="tab on"  onclick="showTab('sk')">Skills<div class="tbadge" id="tb-sk"></div></div>
+      <div class="tab"     onclick="showTab('map')">Map</div>
+      <div class="tab"     onclick="showTab('inv')">Items</div>
+      <div class="tab"     onclick="showTab('upg')">Upgrades</div>
+      <div class="tab"     onclick="showTab('heroes')">Heroes</div>
+    </div>
+    <div class="tab-content" id="tab-body"></div>
+  </div>
+</div>
+
+<div id="prestige-modal">
+  <div class="pmodal">
+    <h2>✦ Rebirth ✦</h2>
+    <p>Reset your journey for permanent power.<br>Requires: Base Level 99 + Second Class.</p>
+    <p>You will receive: <span class="pw" id="prestige-reward">1 Rebirth Star</span></p>
+    <p style="font-size:var(--fs-body);color:var(--dim);margin-top:6px">Each star: +10% all damage</p>
+    <div class="modal-btns">
+      <button class="modal-btn ok" onclick="doPrestige()">Confirm Rebirth</button>
+      <button class="modal-btn no" onclick="closePrestige()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// PRIMARY STATS (RO Wiki: STR AGI VIT INT DEX LUK)
+// ═══════════════════════════════════════════════════════════
+const PRIMARY_STATS = [
+  {id:"str", name:"STR", icon:"⚔️",  desc:"Physical ATK, Weight Limit",
+   effects: (v,G)=>({ atk: v*3, weightMax: v*30 }) },
+  {id:"agi", name:"AGI", icon:"💨",  desc:"ASPD, FLEE rate",
+   effects: (v,G)=>({ flee: v*1, aspd: v*0.5 }) },
+  {id:"vit", name:"VIT", icon:"🛡️",  desc:"Max HP, DEF, HP Recovery",
+   effects: (v,G)=>({ maxHpBonus: v*10, def: v*0.5, hpRegen: Math.floor(v/5)+1 }) },
+  {id:"int_", name:"INT", icon:"🔮", desc:"MATK, Max SP, SP Recovery",
+   effects: (v,G)=>({ matk: v*3, maxSpBonus: v*5 }) },
+  {id:"dex", name:"DEX", icon:"🎯",  desc:"HIT rate, Cast Time reduction",
+   effects: (v,G)=>({ hit: v*1, castReduce: Math.floor(v/10) }) },
+  {id:"luk", name:"LUK", icon:"🍀",  desc:"CRIT, Perfect Dodge, LUK-based ATK",
+   effects: (v,G)=>({ crit: (v/3)*0.01, critDmgBonus: v*0.005 }) },
+];
+
+// ═══════════════════════════════════════════════════════════
+// FULL SKILL DATABASE — based on RO Wiki Skill Info Template
+// Each skill has all template fields filled.
+// Tree structure: prereqs lists skill IDs + min levels required.
+// ═══════════════════════════════════════════════════════════
+const SKILL_DB = {
+
+  // ─── SHARED / NOVICE ───
+  "basic_skill": {
+    id:"basic_skill", name:"Basic Skill", icon:"📖",
+    job:"Novice", type:"Passive", levels:9,
+    desc:"Fundamental adventuring knowledge. Increases item pick-up rate and basic combat proficiency.",
+    prereqs:[], unlocks:["job_change"],
+    spCost:[], hpCost:[], castTime:[], delay:[], cooldown:[], duration:[],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Skill Point Bonus: +${lv}. Basic item use proficiency improved.` }),
+    passive: true,
+    statBonus: (lv)=>({})
+  },
+  "first_aid": {
+    id:"first_aid", name:"First Aid", icon:"🩺",
+    job:"Novice", type:"Supportive", levels:1,
+    desc:"Use basic medical knowledge to recover 5 HP. Requires no SP.",
+    prereqs:[], unlocks:[],
+    spCost:[0], hpCost:[0], castTime:[0], delay:[2], cooldown:[0], duration:[0],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Restores 5 HP instantly. No SP cost.`, heal:5 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+
+  // ─── SWORDSMAN ───
+  "sword_mastery": {
+    id:"sword_mastery", name:"Sword Mastery", icon:"🗡️",
+    job:"Swordsman", type:"Passive", levels:10,
+    desc:"Increases ATK when wielding a One-Handed Sword or Dagger.",
+    prereqs:[], unlocks:["two_hand_mastery","bash"],
+    spCost:[], hpCost:[], castTime:[], delay:[], cooldown:[], duration:[],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`+${lv*4} ATK with Sword/Dagger.`, atkBonus: lv*4 }),
+    passive: true,
+    statBonus: (lv)=>({ atk: lv*4 })
+  },
+  "two_hand_mastery": {
+    id:"two_hand_mastery", name:"Two-Hand Mastery", icon:"⚔️",
+    job:"Swordsman", type:"Passive", levels:10,
+    desc:"Increases ATK when wielding a Two-Handed Sword.",
+    prereqs:[{id:"sword_mastery",lv:1}], unlocks:["banding"],
+    spCost:[], hpCost:[], castTime:[], delay:[], cooldown:[], duration:[],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`+${lv*4} ATK with Two-Handed Sword.`, atkBonus: lv*4 }),
+    passive: true,
+    statBonus: (lv)=>({ atk: lv*4 })
+  },
+  "bash": {
+    id:"bash", name:"Bash", icon:"💥",
+    job:"Swordsman", type:"Offensive", levels:10,
+    desc:"A crushing melee strike dealing increased damage. At Lv10 has a 15% chance to stun.",
+    prereqs:[{id:"sword_mastery",lv:1}], unlocks:["magnum_break","provoke"],
+    spCost:[8,8,8,8,8,10,10,10,10,10],
+    hpCost:[0,0,0,0,0,0,0,0,0,0],
+    castTime:[0,0,0,0,0,0,0,0,0,0],
+    delay:[1,1,1,1,1,1,1,1,1,1],
+    cooldown:[0,0,0,0,0,0,0,0,0,0], duration:[0],
+    target:"Single Enemy", range:"Melee", area:"1 cell", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`${100+30*lv}% ATK. ${lv>=5?"Stun chance: "+(lv*1.5).toFixed(0)+"%":""}`, dmgMult: 1+(0.3*lv) }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "magnum_break": {
+    id:"magnum_break", name:"Magnum Break", icon:"🔥",
+    job:"Swordsman", type:"Offensive", levels:10,
+    desc:"Releases stored heat in a fiery shockwave around the caster. Fire property damage in 3×3 area.",
+    prereqs:[{id:"bash",lv:5}], unlocks:["brandish_spear"],
+    spCost:[30,30,30,30,30,30,30,30,30,30],
+    hpCost:[0], castTime:[0], delay:[2], cooldown:[0], duration:[0],
+    target:"Area", range:"Self", area:"3×3",  element:"Fire",
+    effectPerLv: (lv)=>({ desc:`${100+20*lv}% ATK as Fire AoE. Knock back ${lv>=6?2:1} cells. ATK+${lv*10}% for 10s after.`, dmgMult: 1+(0.2*lv) }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "provoke": {
+    id:"provoke", name:"Provoke", icon:"😠",
+    job:"Swordsman", type:"Offensive", levels:10,
+    desc:"Taunts a target, increasing its ATK but reducing its DEF. Raises enemy aggro.",
+    prereqs:[{id:"bash",lv:1}], unlocks:["endure"],
+    spCost:[4,4,4,4,4,6,6,6,6,6],
+    hpCost:[0], castTime:[0], delay:[1], cooldown:[0],
+    duration:[30,35,40,45,50,55,60,65,70,75],
+    target:"Single Enemy", range:"9 cells", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Target DEF −${5+lv*5}%, ATK +${lv*5}%. Lasts ${30+lv*5}s.`, defDebuff: -(5+lv*5), atkDebuffEnemy: lv*5, debuffDur: 30+lv*5 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "endure": {
+    id:"endure", name:"Endure", icon:"🪨",
+    job:"Swordsman", type:"Supportive", levels:10,
+    desc:"Enables the caster to endure knockback and briefly ignore enemy interrupts.",
+    prereqs:[{id:"provoke",lv:5}], unlocks:[],
+    spCost:[10,10,10,10,10,10,10,10,10,10],
+    hpCost:[0], castTime:[0], delay:[2], cooldown:[0],
+    duration:[10,13,16,19,22,25,28,31,34,40],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Immune to knockback. MDEF +${lv}. Duration: ${10+lv*3}s.`, mdefBonus: lv }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+
+  // ─── MAGE ───
+  "fire_bolt": {
+    id:"fire_bolt", name:"Fire Bolt", icon:"🔥",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Launches bolts of fire at a single target. Number of bolts equals skill level.",
+    prereqs:[], unlocks:["fire_ball","fire_wall"],
+    spCost:[12,14,16,18,20,22,24,26,28,30],
+    hpCost:[0], castTime:[1.5,1.5,2,2,2.5,2.5,3,3,3.5,3.5],
+    delay:[1], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Magic", area:"—", element:"Fire",
+    effectPerLv: (lv)=>({ desc:`${lv} Fire bolts, each dealing 1×MATK Fire damage.`, dmgMult: lv*1.0 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "cold_bolt": {
+    id:"cold_bolt", name:"Cold Bolt", icon:"❄️",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Launches bolts of ice at a single target. Can freeze on higher levels.",
+    prereqs:[], unlocks:["frost_diver","water_ball"],
+    spCost:[12,14,16,18,20,22,24,26,28,30],
+    hpCost:[0], castTime:[1.5,1.5,2,2,2.5,2.5,3,3,3.5,3.5],
+    delay:[1], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Magic", area:"—", element:"Water",
+    effectPerLv: (lv)=>({ desc:`${lv} Ice bolts, each dealing 1×MATK Water damage. Lv${lv>=5?5:"-"}: +Freeze chance.`, dmgMult: lv*1.0 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "lightning_bolt": {
+    id:"lightning_bolt", name:"Lightning Bolt", icon:"⚡",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Launches bolts of lightning at a single target.",
+    prereqs:[], unlocks:["thunderstorm"],
+    spCost:[12,14,16,18,20,22,24,26,28,30],
+    hpCost:[0], castTime:[1.5,1.5,2,2,2.5,2.5,3,3,3.5,3.5],
+    delay:[1], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Magic", area:"—", element:"Wind",
+    effectPerLv: (lv)=>({ desc:`${lv} Lightning bolts, each dealing 1×MATK Wind damage.`, dmgMult: lv*1.0 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "fire_ball": {
+    id:"fire_ball", name:"Fire Ball", icon:"🌋",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Hurls a ball of fire that explodes in a 3×3 area around target.",
+    prereqs:[{id:"fire_bolt",lv:4}], unlocks:["meteor_storm"],
+    spCost:[20,20,20,20,25,25,25,30,30,35],
+    hpCost:[0], castTime:[1.5], delay:[1.5], cooldown:[0], duration:[0],
+    target:"Single Enemy / Area", range:"Magic", area:"3×3", element:"Fire",
+    effectPerLv: (lv)=>({ desc:`${100+50*lv}% MATK Fire damage in 3×3 area.`, dmgMult: 1+(0.5*lv) }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "frost_diver": {
+    id:"frost_diver", name:"Frost Diver", icon:"🧊",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Launches a powerful ice spike that can freeze the target.",
+    prereqs:[{id:"cold_bolt",lv:4}], unlocks:["ice_wall"],
+    spCost:[25,25,25,25,25,25,25,25,25,25],
+    hpCost:[0], castTime:[1], delay:[1], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Magic", area:"—", element:"Water",
+    effectPerLv: (lv)=>({ desc:`200% MATK Water damage. Freeze chance: ${20+lv*7}%.`, dmgMult: 2.0, freezeChance: 20+lv*7 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "thunderstorm": {
+    id:"thunderstorm", name:"Thunderstorm", icon:"⛈️",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Calls down a storm of thunder bolts in a 5×5 area around target. Hits 8 times.",
+    prereqs:[{id:"lightning_bolt",lv:4}], unlocks:[],
+    spCost:[40,40,40,40,40,45,45,45,45,50],
+    hpCost:[0], castTime:[5], delay:[3], cooldown:[0], duration:[10],
+    target:"Area", range:"Magic", area:"5×5", element:"Wind",
+    effectPerLv: (lv)=>({ desc:`8 hits of ${40+lv*10}% MATK Wind damage. Hit interval: 0.5s.`, dmgMult: 0.4+lv*0.1 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "soul_strike": {
+    id:"soul_strike", name:"Soul Strike", icon:"👻",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Fires pure spiritual energy at a target. Extra damage vs Undead.",
+    prereqs:[], unlocks:["napalm_beat"],
+    spCost:[16,18,20,22,24,26,28,30,32,34],
+    hpCost:[0], castTime:[1], delay:[1], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Magic", area:"—", element:"Ghost",
+    effectPerLv: (lv)=>({ desc:`${1+(lv%2===0?lv/2:Math.ceil(lv/2))} hits × 1×MATK Ghost. +50% vs Undead.`, dmgMult: lv }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "napalm_beat": {
+    id:"napalm_beat", name:"Napalm Beat", icon:"💫",
+    job:"Mage", type:"Offensive", levels:10,
+    desc:"Creates a 3×3 area of ghostly fire at target location.",
+    prereqs:[{id:"soul_strike",lv:4}], unlocks:["napalm_vulcan"],
+    spCost:[10,12,14,16,18,20,22,24,26,30],
+    hpCost:[0], castTime:[0.75], delay:[1], cooldown:[0], duration:[0],
+    target:"Area", range:"Magic", area:"3×3", element:"Ghost",
+    effectPerLv: (lv)=>({ desc:`${70+lv*30}% MATK Ghost damage in 3×3.`, dmgMult: 0.7+lv*0.3 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+
+  // ─── ARCHER ───
+  "arrow_shower": {
+    id:"arrow_shower", name:"Arrow Shower", icon:"🏹",
+    job:"Archer", type:"Offensive", levels:10,
+    desc:"Releases a volley of arrows in a 5×5 area around target.",
+    prereqs:[], unlocks:["double_strafe","ankle_snare"],
+    spCost:[15,15,15,15,15,20,20,20,20,20],
+    hpCost:[0], castTime:[0], delay:[1.5], cooldown:[0], duration:[0],
+    target:"Area", range:"9 cells", area:"5×5", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`${100+30*lv}% ATK in 5×5 area. Knock back ${lv>=5?2:1} cells.`, dmgMult: 1+0.3*lv }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "double_strafe": {
+    id:"double_strafe", name:"Double Strafe", icon:"🎯",
+    job:"Archer", type:"Offensive", levels:10,
+    desc:"Fires two arrows in rapid succession at a single target.",
+    prereqs:[{id:"arrow_shower",lv:5}], unlocks:["falcon_assault"],
+    spCost:[12,12,12,12,12,14,14,14,14,14],
+    hpCost:[0], castTime:[0], delay:[0.5], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"9 cells", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`2 arrows, each dealing ${100+10*lv}% ATK.`, dmgMult: (2*(1+0.1*lv)) }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "owl_eye": {
+    id:"owl_eye", name:"Owl's Eye", icon:"🦉",
+    job:"Archer", type:"Passive", levels:10,
+    desc:"Improves visual acuity, increasing DEX.",
+    prereqs:[], unlocks:["vultures_eye"],
+    spCost:[], hpCost:[], castTime:[], delay:[], cooldown:[], duration:[],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`+${lv} DEX.`, dexBonus: lv }),
+    passive: true,
+    statBonus: (lv)=>({ dex: lv })
+  },
+  "vultures_eye": {
+    id:"vultures_eye", name:"Vulture's Eye", icon:"🦅",
+    job:"Archer", type:"Passive", levels:10,
+    desc:"Increases bow range and HIT rate.",
+    prereqs:[{id:"owl_eye",lv:3}], unlocks:[],
+    spCost:[], hpCost:[], castTime:[], delay:[], cooldown:[], duration:[],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Bow range +${lv} cells. HIT +${lv}.`, rangeBonus: lv, hitBonus: lv }),
+    passive: true,
+    statBonus: (lv)=>({ hit: lv })
+  },
+
+  // ─── ACOLYTE ───
+  "heal": {
+    id:"heal", name:"Heal", icon:"💚",
+    job:"Acolyte", type:"Supportive", levels:10,
+    desc:"Channels divine energy to restore HP. Damages Undead monsters.",
+    prereqs:[], unlocks:["cure","blessing","sanctuary"],
+    spCost:[13,15,17,19,21,23,25,27,29,32],
+    hpCost:[0], castTime:[1.5], delay:[1], cooldown:[0],
+    duration:[0],
+    target:"Self or Ally", range:"9 cells", area:"—", element:"Holy",
+    effectPerLv: (lv)=>({ desc:`Heals ${40+lv*30} + INT×${lv} HP. Damages Undead for same amount.`, heal: 40+lv*30 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "blessing": {
+    id:"blessing", name:"Blessing", icon:"✨",
+    job:"Acolyte", type:"Supportive", levels:10,
+    desc:"Blesses a target, increasing STR, DEX, and INT for a duration.",
+    prereqs:[{id:"heal",lv:5}], unlocks:["holy_light","aspersio"],
+    spCost:[28,30,32,34,36,38,40,42,44,46],
+    hpCost:[0], castTime:[0.5], delay:[1], cooldown:[0],
+    duration:[60,80,100,120,150,180,210,240,270,300],
+    target:"Single Ally", range:"9 cells", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`+${lv} STR, +${lv} DEX, +${lv} INT for ${60+lv*24}s.`, strBonus:lv, dexBonus:lv, intBonus:lv }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "cure": {
+    id:"cure", name:"Cure", icon:"💊",
+    job:"Acolyte", type:"Supportive", levels:1,
+    desc:"Removes Silence, Confusion, and Blind status effects from a target.",
+    prereqs:[{id:"heal",lv:1}], unlocks:[],
+    spCost:[15], hpCost:[0], castTime:[0.5], delay:[1], cooldown:[0], duration:[0],
+    target:"Single Ally", range:"9 cells", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Removes Silence, Confusion, Blind.` }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "increase_agility": {
+    id:"increase_agility", name:"Increase AGI", icon:"⚡",
+    job:"Acolyte", type:"Supportive", levels:10,
+    desc:"Temporarily increases AGI and Movement Speed of target.",
+    prereqs:[{id:"heal",lv:3}], unlocks:[],
+    spCost:[18,18,18,18,18,24,24,24,24,24],
+    hpCost:[0], castTime:[0.5], delay:[1], cooldown:[0],
+    duration:[60,80,100,120,150,180,210,240,270,300],
+    target:"Single Ally", range:"9 cells", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`+${lv*2} AGI, +30% Move Speed for ${60+lv*24}s.`, agiBonus: lv*2 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+
+  // ─── THIEF ───
+  "steal": {
+    id:"steal", name:"Steal", icon:"🎭",
+    job:"Thief", type:"Active", levels:10,
+    desc:"Steals an item from a monster's drop table.",
+    prereqs:[], unlocks:["backstab","hiding"],
+    spCost:[10,10,10,10,10,10,10,10,10,10],
+    hpCost:[0], castTime:[0], delay:[2], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Melee", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Steal success: ${20+lv*6}% (base). Each lv also allows stealing higher rarity drops.`, successRate: 20+lv*6 }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "hiding": {
+    id:"hiding", name:"Hiding", icon:"👤",
+    job:"Thief", type:"Active", levels:10,
+    desc:"Conceals the caster from enemies. Duration increases per level.",
+    prereqs:[{id:"steal",lv:5}], unlocks:["cloaking"],
+    spCost:[10,10,10,10,10,10,10,10,10,10],
+    hpCost:[0], castTime:[0], delay:[0], cooldown:[0],
+    duration:[30,35,40,45,50,55,60,65,70,75],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`Hidden for ${30+lv*5}s. Immune to non-detecting skills.` }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "backstab": {
+    id:"backstab", name:"Backstab", icon:"🗡️",
+    job:"Thief", type:"Offensive", levels:10,
+    desc:"A devastating attack from behind. Cannot be used facing the enemy.",
+    prereqs:[{id:"steal",lv:4}], unlocks:["sonic_blow"],
+    spCost:[12,12,12,12,12,15,15,15,15,15],
+    hpCost:[0], castTime:[0], delay:[1], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Melee", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`${100+40*lv}% ATK. Best from behind. Ignores ${lv*5}% DEF.`, dmgMult: 1+0.4*lv }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+
+  // ─── MERCHANT ───
+  "mammonite": {
+    id:"mammonite", name:"Mammonite", icon:"💰",
+    job:"Merchant", type:"Offensive", levels:10,
+    desc:"Spends Zeny to power up a strike with gold-infused force.",
+    prereqs:[], unlocks:["cart_attack","enlarge_weight"],
+    spCost:[0,0,0,0,0,0,0,0,0,0],
+    hpCost:[0], castTime:[0], delay:[1], cooldown:[0], duration:[0],
+    target:"Single Enemy", range:"Melee", area:"—", element:"Neutral",
+    catalyst:"Zeny (100×level per cast)",
+    effectPerLv: (lv)=>({ desc:`${100+100*lv}% ATK. Costs ${100*lv} Zeny per use.`, dmgMult: 1+lv, zenyCost: 100*lv }),
+    passive: false,
+    statBonus: (lv)=>({})
+  },
+  "enlarge_weight": {
+    id:"enlarge_weight", name:"Enlarge Weight Limit", icon:"🏋️",
+    job:"Merchant", type:"Passive", levels:10,
+    desc:"Increases maximum Weight Limit.",
+    prereqs:[{id:"mammonite",lv:1}], unlocks:[],
+    spCost:[], hpCost:[], castTime:[], delay:[], cooldown:[], duration:[],
+    target:"Self", range:"—", area:"—", element:"Neutral",
+    effectPerLv: (lv)=>({ desc:`+${lv*200} Weight Limit.`, weightBonus: lv*200 }),
+    passive: true,
+    statBonus: (lv)=>({})
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// JOB SKILL LISTS
+// ═══════════════════════════════════════════════════════════
+const JOB_SKILLS = {
+  Novice:    ["basic_skill","first_aid"],
+  Swordsman: ["basic_skill","sword_mastery","two_hand_mastery","bash","magnum_break","provoke","endure"],
+  Mage:      ["basic_skill","fire_bolt","cold_bolt","lightning_bolt","soul_strike","fire_ball","frost_diver","thunderstorm","napalm_beat"],
+  Archer:    ["basic_skill","arrow_shower","double_strafe","owl_eye","vultures_eye"],
+  Acolyte:   ["basic_skill","heal","cure","blessing","increase_agility"],
+  Thief:     ["basic_skill","steal","hiding","backstab"],
+  Merchant:  ["basic_skill","mammonite","enlarge_weight"],
+};
+
+// ═══════════════════════════════════════════════════════════
+// WORLD MAPS (abbreviated, from previous file)
+// ═══════════════════════════════════════════════════════════
+const WORLD_MAPS = [
+  {id:0,name:"Prontera Field 01",country:"Rune-Midgarts",lvReq:1,lvRec:1,expM:1.0,zenyM:1.0,waveMax:10,type:"field",
+   monsters:[
+     {n:"Poring",e:"🟣",lv:2,hp:50,atk:4,exp:6,jexp:4,zeny:[40,100],drops:[["400",30]]},
+     {n:"Fabre",e:"🐛",lv:3,hp:65,atk:7,exp:9,jexp:6,zeny:[50,120],drops:[["005",50]]},
+     {n:"Lunatic",e:"🐰",lv:4,hp:75,atk:9,exp:12,jexp:8,zeny:[60,150],drops:[["001",40]]},
+     {n:"BOSS: Vocal",e:"🎵",lv:8,hp:400,atk:22,exp:90,jexp:60,zeny:[1200,2800],boss:true,drops:[["401",90]]}
+   ]},
+  {id:1,name:"Payon Forest 01",country:"Rune-Midgarts",lvReq:5,lvRec:6,expM:1.3,zenyM:1.2,waveMax:10,type:"field",
+   monsters:[
+     {n:"Willow",e:"🌿",lv:6,hp:95,atk:13,exp:18,jexp:12,zeny:[90,230],drops:[["005",60]]},
+     {n:"Fabre",e:"🐛",lv:3,hp:65,atk:7,exp:9,jexp:6,zeny:[50,120],drops:[["005",50]]},
+     {n:"Boa",e:"🐍",lv:8,hp:120,atk:18,exp:28,jexp:18,zeny:[140,340],drops:[["002",40]]},
+     {n:"BOSS: Eddga",e:"🐯",lv:13,hp:800,atk:44,exp:380,jexp:240,zeny:[5000,11000],boss:true,drops:[["403",85]]}
+   ]},
+  {id:2,name:"Geffen Field 03",country:"Rune-Midgarts",lvReq:10,lvRec:11,expM:1.6,zenyM:1.4,waveMax:10,type:"field",
+   monsters:[
+     {n:"Orc Warrior",e:"🗡",lv:13,hp:160,atk:32,exp:55,jexp:36,zeny:[280,680],drops:[["002",45]]},
+     {n:"Orc Lady",e:"👸",lv:12,hp:140,atk:28,exp:48,jexp:32,zeny:[240,590],drops:[["001",55]]},
+     {n:"BOSS: Orc Lord",e:"👑",lv:19,hp:1600,atk:72,exp:700,jexp:440,zeny:[10000,22000],boss:true,drops:[["403",90],["003",50]]}
+   ]},
+  {id:3,name:"Sograt Desert 01",country:"Rune-Midgarts",lvReq:16,lvRec:17,expM:2.1,zenyM:1.8,waveMax:10,type:"field",
+   monsters:[
+     {n:"Peco Peco",e:"🦜",lv:18,hp:240,atk:45,exp:95,jexp:62,zeny:[480,1160],drops:[["002",40]]},
+     {n:"Muka",e:"🌵",lv:16,hp:210,atk:38,exp:78,jexp:51,zeny:[390,950],drops:[["001",55]]},
+     {n:"BOSS: Phreeoni",e:"🦁",lv:24,hp:2800,atk:110,exp:1300,jexp:820,zeny:[20000,45000],boss:true,drops:[["403",95]]}
+   ]},
+  {id:4,name:"Lighthalzen Field 01",country:"Schwartzvald",lvReq:26,lvRec:27,expM:3.3,zenyM:2.8,waveMax:10,type:"field",
+   monsters:[
+     {n:"Rafflesia",e:"🌺",lv:28,hp:420,atk:92,exp:198,jexp:128,zeny:[990,2380],drops:[["003",55]]},
+     {n:"Metaling",e:"⚙️",lv:25,hp:370,atk:80,exp:172,jexp:112,zeny:[860,2060],drops:[["005",65]]},
+     {n:"BOSS: Atroce",e:"🔴",lv:35,hp:7500,atk:210,exp:4000,jexp:2530,zeny:[65000,145000],boss:true,drops:[["403",100]]}
+   ]},
+];
+
+const ITEMS = {
+  "100":{n:"Short Sword",  cat:"Weapon",  atk:24,      buy:500,  sell:150},
+  "101":{n:"Broadsword",   cat:"Weapon",  atk:48,      buy:2000, sell:600},
+  "120":{n:"Staff",        cat:"Weapon",  atk:8,matk:22,buy:600, sell:180},
+  "130":{n:"Short Bow",    cat:"Weapon",  atk:20,      buy:700,  sell:210},
+  "110":{n:"Dagger",       cat:"Weapon",  atk:15,      buy:300,  sell:90},
+  "200":{n:"Coat",         cat:"Armor",   def:6,       buy:400,  sell:120},
+  "201":{n:"Leather Armor",cat:"Armor",   def:12,      buy:1200, sell:360},
+  "400":{n:"Red Potion",   cat:"Consumable",effect:"healHP",val:45,buy:50,sell:15},
+  "401":{n:"Yellow Potion",cat:"Consumable",effect:"healHP",val:150,buy:100,sell:30},
+  "402":{n:"Blue Potion",  cat:"Consumable",effect:"healSP",val:40,buy:100,sell:30},
+  "403":{n:"White Potion", cat:"Consumable",effect:"healBoth",val:200,val2:100,buy:1500,sell:450},
+  "001":{n:"Phracon",      cat:"Material",buy:2500,sell:750},
+  "002":{n:"Elunium",      cat:"Material",buy:8000,sell:2400},
+  "003":{n:"Oridecon",     cat:"Material",buy:8000,sell:2400},
+  "005":{n:"Iron Ore",     cat:"Material",buy:1000,sell:300},
+};
+
+const HEROES = [
+  {id:"h1",n:"Apprentice Knight",e:"🛡️",baseDps:2,  lvCost:30,  upCost:50,   lvMax:50},
+  {id:"h2",n:"Wandering Mage",   e:"📖",baseDps:6,  lvCost:200, upCost:300,  lvMax:50},
+  {id:"h3",n:"Rogue Scout",      e:"🔍",baseDps:15, lvCost:600, upCost:800,  lvMax:50},
+  {id:"h4",n:"Holy Acolyte",     e:"💫",baseDps:40, lvCost:2000,upCost:2500, lvMax:50},
+];
+
+const UPGRADES = [
+  {id:"u_hp",  n:"Iron Constitution", desc:"+25 Max HP",      cost:300, maxLv:15, eff:"hp",   val:25},
+  {id:"u_sp",  n:"Mana Crystal",      desc:"+20 Max SP",      cost:280, maxLv:10, eff:"sp",   val:20},
+  {id:"u_regen",n:"Natural Recovery", desc:"+1 HP Regen/s",   cost:900, maxLv:8,  eff:"regen",val:1},
+  {id:"u_dps", n:"Battle Rhythm",     desc:"+15% Auto DPS",   cost:1200,maxLv:10, eff:"dps",  val:.15},
+  {id:"u_exp", n:"Scholar's Tome",    desc:"+15% EXP Gain",   cost:800, maxLv:8,  eff:"exp",  val:.15},
+  {id:"u_zeny",n:"Merchant's Eye",    desc:"+15% Zeny Drops", cost:850, maxLv:8,  eff:"zeny", val:.15},
+  {id:"u_click",n:"Power Strike",     desc:"+20% Click DMG",  cost:600, maxLv:10, eff:"click",val:.2},
+];
+
+const JOB_DB = {
+  Novice:   {e:"🧍",hp:60, sp:40, str:1,agi:1,vit:1,int_:1,dex:1,luk:1, wpn:"100",arm:"200"},
+  Swordsman:{e:"⚔️", hp:120,sp:35, str:5,agi:2,vit:4,int_:1,dex:1,luk:1, wpn:"101",arm:"201"},
+  Mage:     {e:"🔮",hp:60, sp:100,str:1,agi:1,vit:1,int_:6,dex:3,luk:1, wpn:"120",arm:"200"},
+  Archer:   {e:"🏹",hp:80, sp:55, str:2,agi:6,vit:1,int_:1,dex:5,luk:3, wpn:"130",arm:"200"},
+  Acolyte:  {e:"✨",hp:85, sp:90, str:1,agi:2,vit:3,int_:3,dex:1,luk:1, wpn:"120",arm:"200"},
+  Thief:    {e:"🗡️", hp:85, sp:50, str:2,agi:6,vit:1,int_:1,dex:2,luk:5, wpn:"110",arm:"200"},
+  Merchant: {e:"💰",hp:100,sp:45, str:4,agi:2,vit:3,int_:1,dex:2,luk:2, wpn:"100",arm:"200"},
+};
+
+// ═══════════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════════
+let G;
+let SKcds={}, buffT=0, provokeT=0;
+let activeTab="sk", autoTick, regenTick, toastTmr;
+
+function startGame(){
+  const name = document.getElementById("iName").value.trim()||"Adventurer";
+  const job  = document.querySelector(".c-opt.on")?.dataset.job||"Swordsman";
+  const jd   = JOB_DB[job];
+
+  // Build base stats object from job defaults
+  const baseStats = {};
+  PRIMARY_STATS.forEach(ps => { baseStats[ps.id] = jd[ps.id]||1; });
+
+  G = {
+    name, job,
+    lv:1, exp:0, expMax:100,
+    jobLv:1, jobExp:0,
+    hp:jd.hp, maxHp:jd.hp,
+    sp:jd.sp, maxSp:jd.sp,
+    // Primary stats (base values)
+    stats: baseStats,
+    // Bonus stats from items/skills/blessing (not permanent)
+    statsBonus: {str:0,agi:0,vit:0,int_:0,dex:0,luk:0},
+    // Stat allocation
+    attrPoints: 0,           // unspent attribute points
+    // Skill system
+    skills: {},              // {skillId: level}
+    skillPoints: 0,          // unspent skill points
+    zeny:0, prestigeStars:0,
+    zoneIdx:0,
+    wave:1, waveKills:0, waveGoal:5,
+    enemy:null, eHp:0, eMaxHp:0,
+    inv:[{id:"400",q:5},{id:"402",q:3}],
+    equip:{wpn:jd.wpn, arm:"200"},
+    kills:0,
+    upgrades:{},heroes:{},
+    bonuses:{regen:1,dpsB:0,expB:0,zenyB:0,clickB:0},
+    // Active buffs
+    blessingTimer:0, blessingBonus:{str:0,dex:0,int_:0},
+    increaseAgiTimer:0, increaseAgiBonus:{agi:0},
+    // Tracking
+    provokeDur:0,
+  };
+
+  // Initialize all available skills at level 0
+  (JOB_SKILLS[job]||[]).forEach(id => { G.skills[id] = 0; });
+  // Give basic_skill lv 1 and first_aid lv 1 to start
+  G.skills["basic_skill"] = 1;
+  G.skills["first_aid"]   = 1;
+
+  document.getElementById("title").style.display="none";
+  document.getElementById("app").classList.add("on");
+  spawnEnemy(); showTab("sk"); renderAll();
+  log("sys","Welcome, "+G.name+" the "+G.job+"! You begin your journey.");
+  log("sys","Each Base Level grants +1 Attribute Point. Each Job Level grants +1 Skill Point.");
+  log("sys","Open the Skills tab to level up abilities. Allocate attributes using the left panel.");
+  autoTick  = setInterval(gameTick, 1000);
+  regenTick = setInterval(regenLoop, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMPUTED STATS (totals including bonuses + buffs)
+// ═══════════════════════════════════════════════════════════
+function computedStat(key){
+  const base  = G.stats[key]    || 0;
+  const bonus = G.statsBonus[key]|| 0;
+  const bless = G.blessingBonus[key]|| 0;
+  const iAgi  = key==="agi" ? (G.increaseAgiBonus?.agi||0) : 0;
+  // Passive skill bonuses
+  let skBonus = 0;
+  if(key==="str") skBonus += (G.skills["sword_mastery"]||0)*0 ; // ATK not stat
+  if(key==="dex") skBonus += (G.skills["owl_eye"]||0);
+  if(key==="agi") skBonus += 0;
+  return base + bonus + bless + iAgi + skBonus;
+}
+
+function calcATK(){
+  const str = computedStat("str");
+  const wpn = G.equip.wpn ? (ITEMS[G.equip.wpn]?.atk||0) : 0;
+  const swordMastery = (G.skills["sword_mastery"]||0)*4;
+  const twoHand = (G.skills["two_hand_mastery"]||0)*4;
+  const ps = 1 + G.prestigeStars*.10;
+  return Math.floor((str*3 + wpn + G.lv*1.5 + swordMastery + twoHand) * ps);
+}
+function calcMATK(){
+  const int_ = computedStat("int_");
+  const wpn  = G.equip.wpn ? (ITEMS[G.equip.wpn]?.matk||0) : 0;
+  const ps   = 1 + G.prestigeStars*.10;
+  return Math.floor((int_*4 + wpn + G.lv*1.2) * ps);
+}
+function calcDEF(){
+  const vit = computedStat("vit");
+  const arm = G.equip.arm ? (ITEMS[G.equip.arm]?.def||0) : 0;
+  return Math.floor(arm + vit*.5);
+}
+function calcFLEE(){
+  const agi = computedStat("agi");
+  return G.lv + agi;
+}
+function calcHIT(){
+  const dex = computedStat("dex");
+  return G.lv + dex;
+}
+function calcCRIT(){
+  const luk = computedStat("luk");
+  const base = 0.05 + luk*(1/3)*0.01;
+  return Math.min(0.70, base);
+}
+function calcHpRegen(){
+  const vit = computedStat("vit");
+  return G.bonuses.regen + Math.floor(vit/5) + 1;
+}
+function calcMaxHp(){
+  const vit = computedStat("vit");
+  const jd  = JOB_DB[G.job]||{};
+  return jd.hp + vit*10 + (G.upgrades["u_hp"]||0)*25 + G.lv*8;
+}
+function calcMaxSp(){
+  const int_ = computedStat("int_");
+  const jd   = JOB_DB[G.job]||{};
+  return jd.sp + int_*5 + (G.upgrades["u_sp"]||0)*20 + G.lv*3;
+}
+function calcClickDmg(){
+  return Math.max(1, Math.floor(calcATK()*2.2*(1+G.bonuses.clickB)));
+}
+function calcHeroDps(){
+  return Math.floor(Object.entries(G.heroes).reduce((s,[hid,lv])=>{
+    const h=HEROES.find(h=>h.id===hid); return s+(h?h.baseDps*lv:0);
+  },0));
+}
+function calcAutoDps(){
+  return Math.max(1, Math.floor(calcATK()*(0.65+G.bonuses.dpsB)));
+}
+
+// ═══════════════════════════════════════════════════════════
+// STAT ALLOCATION
+// ═══════════════════════════════════════════════════════════
+function allocateStat(statId){
+  if(G.attrPoints <= 0){ toast("No Attribute Points!"); return; }
+  G.stats[statId]++;
+  G.attrPoints--;
+  // Recalculate HP/SP maximums after VIT/INT change
+  const newMaxHp = calcMaxHp();
+  const newMaxSp = calcMaxSp();
+  if(newMaxHp !== G.maxHp){ const diff=newMaxHp-G.maxHp; G.maxHp=newMaxHp; G.hp=Math.min(G.hp+diff,G.maxHp); }
+  if(newMaxSp !== G.maxSp){ const diff=newMaxSp-G.maxSp; G.maxSp=newMaxSp; G.sp=Math.min(G.sp+diff,G.maxSp); }
+  log("stat","✦ "+statId.toUpperCase().replace("_","")+" → "+G.stats[statId]+" ("+G.attrPoints+" pts left)");
+  renderLeft(); updateNotifs();
+}
+
+// ═══════════════════════════════════════════════════════════
+// SKILL TREE
+// ═══════════════════════════════════════════════════════════
+function canLearnSkill(skillId){
+  const sd = SKILL_DB[skillId]; if(!sd) return false;
+  if(G.skillPoints <= 0) return false;
+  const curLv = G.skills[skillId]||0;
+  if(curLv >= sd.levels) return false; // already max
+  // Check prereqs
+  for(const req of (sd.prereqs||[])){
+    if((G.skills[req.id]||0) < req.lv) return false;
+  }
+  return true;
+}
+
+function isSkillAvailable(skillId){
+  const sd = SKILL_DB[skillId]; if(!sd) return false;
+  for(const req of (sd.prereqs||[])){
+    if((G.skills[req.id]||0) < req.lv) return false;
+  }
+  return true;
+}
+
+function learnSkill(skillId){
+  if(!canLearnSkill(skillId)){ toast("Cannot learn this skill now."); return; }
+  G.skillPoints--;
+  G.skills[skillId] = (G.skills[skillId]||0) + 1;
+  const sd = SKILL_DB[skillId];
+  const lv = G.skills[skillId];
+  log("lvl","⚔ Skill: "+sd.name+" → Lv."+lv+" ("+G.skillPoints+" pts left)");
+  // Apply passive stat bonuses immediately
+  if(sd.passive && sd.statBonus){
+    const bonus = sd.statBonus(lv);
+    // We handle these in calcATK etc. dynamically, no persistent state needed
+  }
+  // Unlock new available skills
+  (sd.unlocks||[]).forEach(uid => {
+    if(!(uid in G.skills)) G.skills[uid]=0;
+  });
+  renderAll(); updateNotifs(); showTab("sk");
+}
+
+// ═══════════════════════════════════════════════════════════
+// SKILL ACTIVATION (active skills in combat)
+// ═══════════════════════════════════════════════════════════
+function activateSkill(skillId){
+  const sd = SKILL_DB[skillId];
+  if(!sd||sd.passive) return;
+  const lv = G.skills[skillId]||0;
+  if(lv <= 0){ toast("Skill not learned!"); return; }
+  const cd = SKcds[skillId]||0;
+  if(cd > 0){ toast(sd.name+" on cooldown: "+cd+"s"); return; }
+  const spCost = sd.spCost[lv-1]||0;
+  if(G.sp < spCost){ toast("Not enough SP!"); return; }
+  G.sp -= spCost;
+  if(sd.cooldown && sd.cooldown[lv-1]) SKcds[skillId] = sd.cooldown[lv-1];
+  const eff = sd.effectPerLv(lv);
+
+  if(sd.type==="Offensive"){
+    const isPhys = sd.element!=="Fire"&&sd.element!=="Water"&&sd.element!=="Wind"&&sd.element!=="Ghost"&&sd.element!=="Holy";
+    const base = isPhys ? calcATK() : calcMATK();
+    const crit = Math.random()<calcCRIT();
+    const mult = eff.dmgMult||1;
+    const dmg  = Math.max(1,Math.floor(base*mult*(crit?1.8:1)*(0.9+Math.random()*.2)));
+    log("atk","["+sd.name+"] "+(crit?"✦ Crit! ":"")+"→ "+fmt(dmg)+" "+sd.element+" dmg");
+    spawnFloat(window.innerWidth/2,window.innerHeight*.38,"["+sd.name+"] "+fmt(dmg),crit?"df-crit":"df-click");
+    dealDmg(dmg,"skill",crit);
+  } else if(sd.type==="Supportive"){
+    // Heal
+    if(skillId==="heal"||skillId==="first_aid"){
+      const healAmt = eff.heal||5;
+      const intBonus= Math.floor(computedStat("int_")*lv*0.5);
+      G.hp = Math.min(G.maxHp, G.hp+healAmt+intBonus);
+      log("heal","["+sd.name+"] +"+( healAmt+intBonus)+" HP");
+      spawnFloat(window.innerWidth/2,window.innerHeight*.5,"+"+(healAmt+intBonus)+" HP","df-heal");
+    }
+    // Blessing
+    if(skillId==="blessing"){
+      G.blessingTimer = sd.duration[lv-1]||60;
+      G.blessingBonus = {str:lv,dex:lv,int_:lv};
+      log("heal","[Blessing] +"+lv+" STR/DEX/INT for "+G.blessingTimer+"s");
+      toast("Blessing! +"+lv+" STR, DEX, INT");
+    }
+    // Increase AGI
+    if(skillId==="increase_agility"){
+      G.increaseAgiTimer = sd.duration[lv-1]||60;
+      G.increaseAgiBonus = {agi:lv*2};
+      log("heal","[Increase AGI] +"+lv*2+" AGI for "+G.increaseAgiTimer+"s");
+      toast("Increase AGI active! +"+lv*2+" AGI");
+    }
+  } else if(sd.type==="Active"){
+    // Steal
+    if(skillId==="steal"){
+      const em = getCurEnemy();
+      if(!em){toast("No enemy!");return;}
+      const ch = (eff.successRate||20) + computedStat("luk")*2;
+      if(Math.random()*100 < ch){
+        const d=em.drops&&em.drops.length>0?em.drops[Math.floor(Math.random()*em.drops.length)]:null;
+        if(d){addInv(d[0],1);log("loot","🎭 Steal! Got "+ITEMS[d[0]]?.n);}
+      } else log("sys","Steal failed.");
+    }
+    // Hiding
+    if(skillId==="hiding"){
+      log("sys","[Hiding] You vanish into the shadows...");
+      toast("Hidden for "+eff.dur+"s");
+    }
+  } else if(sd.type==="Offensive" && skillId==="provoke"){
+    provokeT = eff.debuffDur||30;
+    log("atk","[Provoke] Enemy ATK −25%, ATK+"+eff.atkDebuffEnemy+"% for "+provokeT+"s");
+  }
+  // Mammonite
+  if(skillId==="mammonite"){
+    const zenyCost = eff.zenyCost||100;
+    if(G.zeny < zenyCost){ toast("Not enough Zeny (need "+zenyCost+")!"); return; }
+    G.zeny -= zenyCost;
+    const crit = Math.random()<calcCRIT();
+    const dmg  = Math.max(1,Math.floor(calcATK()*eff.dmgMult*(crit?1.8:1)*(0.9+Math.random()*.2)));
+    log("atk","[Mammonite] Spent "+zenyCost+"z! "+(crit?"✦ Crit! ":"")+"→ "+fmt(dmg)+" dmg");
+    dealDmg(dmg,"skill",crit);
+  }
+  renderBars(); if(activeTab==="sk") renderSkillsTab();
+}
+
+// ═══════════════════════════════════════════════════════════
+// GAME TICK
+// ═══════════════════════════════════════════════════════════
+function gameTick(){
+  if(!G.enemy) return;
+  const em = getCurEnemy(); if(!em) return;
+  const zone = WORLD_MAPS[G.zoneIdx];
+
+  // Auto attack
+  const autoDmg = Math.max(1,Math.floor(calcAutoDps()));
+  dealDmg(autoDmg,"auto");
+
+  // Hero DPS
+  const hDps = calcHeroDps();
+  if(hDps>0&&G.eHp>0) dealDmg(Math.max(1,hDps),"hero");
+
+  // Enemy attacks
+  if(G.enemy && G.eHp>0){
+    const pMult = provokeT>0 ? 0.75 : 1;
+    const fleePct = Math.max(0,Math.min(0.50,(calcFLEE()-em.lv*2)*0.01));
+    if(Math.random() > fleePct){
+      const eDmg = Math.max(1,Math.floor(em.atk*pMult*(0.8+Math.random()*.4)-calcDEF()*.4));
+      G.hp = Math.max(0, G.hp-eDmg);
+      if(G.hp<=0) onPlayerDied();
+    }
+  }
+
+  // Passive EXP tick
+  const expT  = Math.floor(em.exp *zone.expM*.08*(1+G.bonuses.expB));
+  const jexpT = Math.floor(em.jexp*zone.expM*.08*(1+G.bonuses.expB));
+  gainExp(expT, jexpT);
+
+  // Update header
+  document.getElementById("h-dps").textContent  = fmt(calcAutoDps()+calcHeroDps());
+  document.getElementById("h-atk").textContent  = calcATK();
+  document.getElementById("h-matk").textContent = calcMATK();
+  document.getElementById("d-dps").textContent  = fmt(calcAutoDps()+calcHeroDps());
+  document.getElementById("d-atk").textContent  = calcATK();
+  document.getElementById("d-matk").textContent = calcMATK();
+  document.getElementById("d-eatk").textContent = em?em.atk:"0";
+  document.getElementById("d-regen").textContent= "+"+calcHpRegen();
+
+  renderBars();
+}
+
+function regenLoop(){
+  // HP regen
+  if(G.hp < G.maxHp) G.hp = Math.min(G.maxHp, G.hp+calcHpRegen());
+  // SP regen (1 + INT/10 per second)
+  const spRegen = 1 + Math.floor(computedStat("int_")/10);
+  if(G.sp < G.maxSp) G.sp = Math.min(G.maxSp, G.sp+spRegen);
+  // Buff timers
+  if(G.blessingTimer>0){ G.blessingTimer--; if(G.blessingTimer<=0){ G.blessingBonus={str:0,dex:0,int_:0}; log("sys","Blessing expired."); } }
+  if(G.increaseAgiTimer>0){ G.increaseAgiTimer--; if(G.increaseAgiTimer<=0){ G.increaseAgiBonus={agi:0}; } }
+  if(provokeT>0) provokeT--;
+  // Skill cooldowns
+  for(const sk in SKcds) if(SKcds[sk]>0){ SKcds[sk]--; }
+  renderBars();
+  if(activeTab==="sk") renderSkillsTab();
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLICK + COMBAT
+// ═══════════════════════════════════════════════════════════
+function clickAtk(e){
+  if(!G.enemy) return;
+  const crit = Math.random()<calcCRIT();
+  const dmg  = Math.max(1,Math.floor(calcClickDmg()*(crit?1.8:1)));
+  spawnFloat(e.clientX, e.clientY, (crit?"✦ ":"")+fmt(dmg), crit?"df-crit":"df-click");
+  dealDmg(dmg,"click",crit);
+}
+
+function dealDmg(dmg,src,crit){
+  if(!G.enemy||G.eHp<=0) return;
+  G.eHp -= dmg;
+  if(src==="click"&&crit) log("atk","✦ Critical! "+fmt(dmg)+" dmg");
+  updateEnemyBar();
+  if(G.eHp<=0) killEnemy();
+}
+
+function killEnemy(){
+  const em=getCurEnemy(); const zone=WORLD_MAPS[G.zoneIdx];
+  G.kills++; G.waveKills++;
+  const eg = Math.floor(em.exp *zone.expM*(1+G.bonuses.expB));
+  const jg = Math.floor(em.jexp*zone.expM*(1+G.bonuses.expB));
+  const zg = Math.floor((em.zeny[0]+Math.random()*(em.zeny[1]-em.zeny[0]))*zone.zenyM*(1+G.bonuses.zenyB));
+  gainExp(eg,jg); G.zeny+=zg;
+  if(em.boss) log("boss","✦ BOSS: "+em.n+"! +"+fmt(eg)+" EXP +"+fmt(zg)+"z");
+  else        log("ev","⚔ "+em.n+" +"+eg+"exp +"+jg+"jexp +"+zg+"z");
+  for(const [did,rate] of em.drops||[]){ if(Math.random()*100<rate){ addInv(did,1); log("loot","◆ "+ITEMS[did]?.n); } }
+  renderWaveBar();
+  if(G.waveKills>=G.waveGoal) advanceWave(); else setTimeout(spawnEnemy,500);
+  renderLeft();
+}
+
+function onPlayerDied(){
+  log("sys","💀 Defeated. Respawning…");
+  G.hp=Math.floor(G.maxHp*.35);
+  setTimeout(spawnEnemy,1200);
+}
+
+function spawnEnemy(){
+  const zone=WORLD_MAPS[G.zoneIdx];
+  const pool=zone.monsters.filter(m=>!m.boss);
+  const isBoss=G.wave%zone.waveMax===0;
+  let em = isBoss ? zone.monsters.find(m=>m.boss) : pool[Math.floor(Math.random()*pool.length)];
+  if(!em) em=pool[0]; if(!em) return;
+  G.enemy=em.n; G.eMaxHp=Math.floor(em.hp*(1+G.lv*.1)); G.eHp=G.eMaxHp;
+  document.getElementById("e-emoji").textContent=em.e;
+  document.getElementById("e-name").textContent =em.n;
+  document.getElementById("e-meta").textContent ="Lv."+em.lv+" · "+zone.country+(em.boss?" · ✦ BOSS":"");
+  document.getElementById("boss-ring").style.display=em.boss?"block":"none";
+  updateEnemyBar();
+}
+
+function advanceWave(){
+  G.wave++; G.waveKills=0; G.waveGoal=5+Math.floor(G.wave*.5);
+  const b=document.getElementById("wave-banner");
+  b.textContent="✦ Wave "+(G.wave-1)+" Cleared!";
+  b.classList.add("show"); setTimeout(()=>b.classList.remove("show"),1900);
+  document.getElementById("stage-lbl").textContent=WORLD_MAPS[G.zoneIdx].name.toUpperCase()+" — WAVE "+G.wave;
+  setTimeout(spawnEnemy,1100);
+}
+
+function getCurEnemy(){ return WORLD_MAPS[G.zoneIdx].monsters.find(m=>m.n===G.enemy)||WORLD_MAPS[G.zoneIdx].monsters[0]; }
+
+// ═══════════════════════════════════════════════════════════
+// EXP — BASE + JOB LEVELS
+// ═══════════════════════════════════════════════════════════
+function gainExp(amt,jamt){
+  if(amt>0){
+    G.exp+=amt;
+    while(G.exp>=G.expMax){
+      G.exp-=G.expMax; G.lv++;
+      G.expMax=Math.floor(G.expMax*1.5+G.lv*25);
+      G.attrPoints++;          // ← +1 ATTRIBUTE POINT PER BASE LEVEL
+      G.maxHp=calcMaxHp(); G.maxSp=calcMaxSp();
+      G.hp=G.maxHp; G.sp=G.maxSp;
+      log("lvl","★ BASE LV UP → "+G.lv+"! +1 Attribute Point (total: "+G.attrPoints+")");
+      spawnFloat(window.innerWidth/2,window.innerHeight*.4,"LV "+G.lv,"df-exp");
+      toast("Level Up! Lv."+G.lv+" · +1 Attr Point");
+      renderAll(); updateNotifs();
+    }
+  }
+  if(jamt>0){
+    G.jobExp+=jamt;
+    const jMax=Math.floor(80+G.jobLv*30);
+    while(G.jobExp>=jMax){
+      G.jobExp-=jMax; G.jobLv++;
+      G.skillPoints++;          // ← +1 SKILL POINT PER JOB LEVEL
+      log("lvl","⚔ JOB LV UP → "+G.jobLv+"! +1 Skill Point (total: "+G.skillPoints+")");
+      toast("Job Lv "+G.jobLv+"! +1 Skill Point");
+      renderAll(); updateNotifs();
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INVENTORY
+// ═══════════════════════════════════════════════════════════
+function addInv(id,qty){
+  const ex=G.inv.find(s=>s.id===id);
+  if(ex) ex.q+=qty; else G.inv.push({id,q:qty});
+  if(activeTab==="inv") renderInvTab();
+}
+function useItem(id){
+  const s=G.inv.find(s=>s.id===id); if(!s||s.q<=0)return;
+  const it=ITEMS[id]; if(!it||it.cat!=="Consumable")return;
+  if(it.effect==="healHP"){G.hp=Math.min(G.maxHp,G.hp+it.val);log("heal","🧪 "+it.n+" +"+it.val+" HP");spawnFloat(window.innerWidth/2,window.innerHeight*.5,"+"+it.val+" HP","df-heal");}
+  if(it.effect==="healSP"){G.sp=Math.min(G.maxSp,G.sp+it.val);log("heal","🧪 "+it.n+" +"+it.val+" SP");}
+  if(it.effect==="healBoth"){G.hp=Math.min(G.maxHp,G.hp+it.val);G.sp=Math.min(G.maxSp,G.sp+it.val2);log("heal","🧪 "+it.n+" +"+it.val+" HP +"+it.val2+" SP");}
+  s.q--; if(s.q<=0) G.inv=G.inv.filter(x=>x.q>0);
+  renderBars(); if(activeTab==="inv") renderInvTab();
+}
+function sellItem(id){
+  const s=G.inv.find(x=>x.id===id); if(!s)return;
+  const it=ITEMS[id]; if(!it)return;
+  G.zeny+=it.sell*s.q; log("loot","Sold "+it.n+" "+it.sell*s.q+"z");
+  G.inv=G.inv.filter(x=>x.id!==id);
+  renderLeft(); if(activeTab==="inv") renderInvTab();
+}
+function sellMaterials(){
+  let tot=0;
+  G.inv=G.inv.filter(s=>{const it=ITEMS[s.id];if(it&&it.cat==="Material"){tot+=it.sell*s.q;return false;}return true;});
+  G.zeny+=tot; log("loot","Sold materials: "+fmt(tot)+"z");
+  renderLeft(); if(activeTab==="inv") renderInvTab();
+}
+
+// ═══════════════════════════════════════════════════════════
+// TRAVEL
+// ═══════════════════════════════════════════════════════════
+function travelTo(idx){
+  const z=WORLD_MAPS[idx]; if(!z)return;
+  if(G.lv<z.lvReq){toast("Need Lv."+z.lvReq+" for "+z.name);return;}
+  G.zoneIdx=idx; G.wave=1; G.waveKills=0; G.waveGoal=5;
+  document.getElementById("h-loc").textContent=z.name.toUpperCase();
+  document.getElementById("stage-lbl").textContent=z.name.toUpperCase()+" — WAVE 1";
+  log("sys","🗺 Moved to "+z.name);
+  spawnEnemy(); if(activeTab==="map") renderMapTab(); toast("Entered "+z.name);
+}
+
+// ═══════════════════════════════════════════════════════════
+// UPGRADES
+// ═══════════════════════════════════════════════════════════
+function buyUpgrade(uid){
+  const u=UPGRADES.find(x=>x.id===uid); if(!u)return;
+  const cur=G.upgrades[uid]||0;
+  if(cur>=u.maxLv){toast("Maxed!");return;}
+  const cost=Math.floor(u.cost*Math.pow(1.65,cur));
+  if(G.zeny<cost){toast("Need "+fmt(cost)+" Zeny");return;}
+  G.zeny-=cost; G.upgrades[uid]=(cur+1);
+  if(u.eff==="hp"){G.maxHp=calcMaxHp();G.hp=Math.min(G.hp+u.val,G.maxHp);}
+  if(u.eff==="sp") G.maxSp=calcMaxSp();
+  if(u.eff==="regen") G.bonuses.regen+=u.val;
+  if(u.eff==="dps")   G.bonuses.dpsB+=u.val;
+  if(u.eff==="exp")   G.bonuses.expB+=u.val;
+  if(u.eff==="zeny")  G.bonuses.zenyB+=u.val;
+  if(u.eff==="click") G.bonuses.clickB+=u.val;
+  log("ev","⬆ "+u.n+" Lv."+(cur+1));
+  renderLeft(); if(activeTab==="upg") renderUpgTab();
+}
+
+function hireOrUpgradeHero(hid){
+  const hd=HEROES.find(h=>h.id===hid); if(!hd)return;
+  const cur=G.heroes[hid]||0;
+  if(cur>=hd.lvMax){toast("Maxed!");return;}
+  const cost=cur===0?hd.lvCost:Math.floor(hd.upCost*Math.pow(1.5,cur));
+  if(G.zeny<cost){toast("Need "+fmt(cost)+" Zeny");return;}
+  G.zeny-=cost; G.heroes[hid]=(cur+1);
+  if(cur===0) log("ev","✦ Hired: "+hd.n); else log("ev","⬆ "+hd.n+" Lv."+(cur+1));
+  renderLeft(); if(activeTab==="heroes") renderHeroesTab();
+}
+
+function openPrestige(){
+  if(G.lv<99){toast("Need Base Level 99!");return;}
+  document.getElementById("prestige-reward").textContent=(G.prestigeStars+1)+" Rebirth Star(s)";
+  document.getElementById("prestige-modal").classList.add("show");
+}
+function closePrestige(){document.getElementById("prestige-modal").classList.remove("show");}
+function doPrestige(){
+  closePrestige(); G.prestigeStars++;
+  const jd=JOB_DB[G.job];
+  G.lv=1;G.exp=0;G.expMax=100;G.jobLv=1;G.jobExp=0;
+  G.attrPoints=0; G.skillPoints=0;
+  const baseStats={};PRIMARY_STATS.forEach(ps=>{baseStats[ps.id]=jd[ps.id]||1;});
+  G.stats=baseStats; G.statsBonus={str:0,agi:0,vit:0,int_:0,dex:0,luk:0};
+  G.maxHp=calcMaxHp();G.hp=G.maxHp;G.maxSp=calcMaxSp();G.sp=G.maxSp;
+  G.zeny=500;G.zoneIdx=0;G.wave=1;G.waveKills=0;G.waveGoal=5;
+  G.inv=[{id:"400",q:5},{id:"402",q:3}];
+  G.upgrades={};G.heroes={};G.bonuses={regen:1,dpsB:0,expB:0,zenyB:0,clickB:0};
+  G.kills=0; G.skills={}; (JOB_SKILLS[G.job]||[]).forEach(id=>{G.skills[id]=0;});
+  G.skills["basic_skill"]=1;G.skills["first_aid"]=1;
+  spawnEnemy(); renderAll(); showTab("sk");
+  log("job","★ REBIRTH "+G.prestigeStars+"! Power transcends.");
+  toast("★ Rebirth "+G.prestigeStars+" · +"+G.prestigeStars*10+"% DMG");
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+function updateNotifs(){
+  const hasAttr = G.attrPoints > 0;
+  const hasSk   = G.skillPoints > 0;
+  document.getElementById("notif-attr").style.display = hasAttr ? "block" : "none";
+  document.getElementById("notif-skill").style.display = hasSk ? "block" : "none";
+  document.getElementById("h-apts").textContent  = G.attrPoints;
+  document.getElementById("h-spts").textContent  = G.skillPoints;
+  document.getElementById("tb-sk").classList.toggle("show", hasSk);
+}
+
+// ═══════════════════════════════════════════════════════════
+// COMMAND PARSER
+// ═══════════════════════════════════════════════════════════
+function sendCmd(){
+  const raw=document.getElementById("cmd-in").value.trim();
+  document.getElementById("cmd-in").value=""; if(!raw)return;
+  const v=raw.toLowerCase(); log("sys","> "+raw);
+  if(/use.*(potion|red|yellow|white|blue)/.test(v)){
+    const order=["403","401","400","402"];let used=false;
+    for(const id of order){const s=G.inv.find(s=>s.id===id);if(s&&s.q>0){useItem(id);used=true;break;}}
+    if(!used)log("sys","No potions!"); return;
+  }
+  // Activate skill by name
+  for(const [sid,sd] of Object.entries(SKILL_DB)){
+    if(v.includes(sd.name.toLowerCase())){activateSkill(sid);return;}
+  }
+  // Travel
+  for(let i=0;i<WORLD_MAPS.length;i++){
+    if(v.includes(WORLD_MAPS[i].name.toLowerCase())){travelTo(i);return;}
+  }
+  if(/sell all|sell material/.test(v)){sellMaterials();return;}
+  const bm=v.match(/buy (.+)/);
+  if(bm){const found=Object.entries(ITEMS).find(([id,it])=>it.n.toLowerCase()===bm[1]);
+    if(found){const[id,it]=found;if(G.zeny>=it.buy){G.zeny-=it.buy;addInv(id,1);log("loot","Bought "+it.n);renderLeft();}else log("sys","Need "+it.buy+"z");}
+    else log("sys","Item not found.");return;}
+  if(/status|stat/.test(v)){
+    log("sys","── "+G.name+" Lv."+G.lv+" Job."+G.jobLv+" ──");
+    log("sys","HP:"+G.hp+"/"+G.maxHp+"  SP:"+G.sp+"/"+G.maxSp);
+    log("sys","STR:"+computedStat("str")+" AGI:"+computedStat("agi")+" VIT:"+computedStat("vit")+" INT:"+computedStat("int_")+" DEX:"+computedStat("dex")+" LUK:"+computedStat("luk"));
+    log("sys","ATK:"+calcATK()+" MATK:"+calcMATK()+" DEF:"+calcDEF()+" FLEE:"+calcFLEE()+" HIT:"+calcHIT()+" CRIT:"+(calcCRIT()*100).toFixed(0)+"%");
+    log("sys","Attr Pts:"+G.attrPoints+" Skill Pts:"+G.skillPoints);
+    return;
+  }
+  if(/help/.test(v)){
+    log("sys","Commands: use potion · use [skill name] · go [zone] · buy [item] · sell · status");
+    return;
+  }
+  log("sys","Unknown. Type 'help'.");
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB SYSTEM
+// ═══════════════════════════════════════════════════════════
+function showTab(t){
+  activeTab=t;
+  document.querySelectorAll(".tab").forEach((el,i)=>{
+    el.classList.toggle("on",["sk","map","inv","upg","heroes"][i]===t);
+  });
+  if(t==="sk")     renderSkillsTab();
+  else if(t==="map")    renderMapTab();
+  else if(t==="inv")    renderInvTab();
+  else if(t==="upg")    renderUpgTab();
+  else if(t==="heroes") renderHeroesTab();
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+function renderAll(){
+  renderBars(); renderLeft(); renderTopbar();
+  updateNotifs();
+  if(activeTab==="sk")   renderSkillsTab();
+  else if(activeTab==="map")  renderMapTab();
+  else if(activeTab==="inv")  renderInvTab();
+  else if(activeTab==="upg")  renderUpgTab();
+  else if(activeTab==="heroes")renderHeroesTab();
+}
+
+function renderBars(){
+  const p=(v,m)=>Math.max(0,Math.min(100,(v/m)*100)).toFixed(1)+"%";
+  const mHp=calcMaxHp(), mSp=calcMaxSp();
+  G.maxHp=mHp; G.maxSp=mSp;
+  G.hp=Math.min(G.hp,mHp); G.sp=Math.min(G.sp,mSp);
+  document.getElementById("b-hp").style.width  =p(G.hp,mHp);
+  document.getElementById("b-sp").style.width  =p(G.sp,mSp);
+  document.getElementById("b-exp").style.width =p(G.exp,G.expMax);
+  const jMax=Math.floor(80+G.jobLv*30);
+  document.getElementById("b-jexp").style.width=p(G.jobExp,jMax);
+  document.getElementById("b-hpv").textContent =Math.floor(G.hp);
+  document.getElementById("b-hpm").textContent =mHp;
+  document.getElementById("b-spv").textContent =Math.floor(G.sp);
+  document.getElementById("b-spm").textContent =mSp;
+  document.getElementById("b-expv").textContent=Math.floor(G.exp);
+  document.getElementById("b-expm").textContent=G.expMax;
+  document.getElementById("b-jexpv").textContent=Math.floor(G.jobExp);
+  document.getElementById("b-jexpm").textContent=jMax;
+  document.getElementById("b-wkills").textContent=G.waveKills;
+  document.getElementById("b-wgoal").textContent =G.waveGoal;
+}
+function renderWaveBar(){
+  document.getElementById("b-wave").style.width=Math.min(100,(G.waveKills/G.waveGoal)*100)+"%";
+}
+
+function renderLeft(){
+  const jd=JOB_DB[G.job]||{};
+  document.getElementById("p-emoji").textContent=jd.e||"🧍";
+  document.getElementById("p-name").textContent =G.name;
+  document.getElementById("p-class").textContent=G.job;
+  document.getElementById("p-joblv").textContent="Base Lv."+G.lv+" · Job Lv."+G.jobLv;
+
+  // Attribute points badge
+  document.getElementById("attr-pts-badge").textContent=G.attrPoints+" pts";
+  document.getElementById("attr-pts-badge").style.display=G.attrPoints>0?"block":"none";
+
+  // Stat rows
+  const hasPoints=G.attrPoints>0;
+  document.getElementById("stat-rows").innerHTML=PRIMARY_STATS.map(ps=>{
+    const base = G.stats[ps.id]||0;
+    const total= computedStat(ps.id);
+    const bonus= total - base;
+    return `<div class="stat-row">
+      <span class="sicon">${ps.icon}</span>
+      <span class="sname">${ps.name}</span>
+      <span class="sval">${total}</span>
+      <span class="sbonus">${bonus>0?"+"+bonus+" ":""}<span style="font-size:var(--fs-tiny);color:var(--dim)">${ps.desc}</span></span>
+      <button class="stat-btn" onclick="allocateStat('${ps.id}')" ${!hasPoints?"disabled":""}>+</button>
+    </div>`;
+  }).join("");
+
+  // Sub-stats
+  const wi=G.equip.wpn?ITEMS[G.equip.wpn]:null;
+  const ai=G.equip.arm?ITEMS[G.equip.arm]:null;
+  document.getElementById("eq-wpn").textContent=wi?.n||"Unarmed";
+  document.getElementById("eq-wpna").textContent=wi?(wi.atk?"ATK "+wi.atk:(wi.matk?"MATK "+wi.matk:"")):"";
+  document.getElementById("eq-arm").textContent=ai?.n||"None";
+  document.getElementById("eq-arma").textContent=ai?"DEF "+ai.def:"";
+  document.getElementById("bs-zeny").textContent=fmt(G.zeny);
+  document.getElementById("bs-crit").textContent=(calcCRIT()*100).toFixed(0)+"%";
+  document.getElementById("bs-def").textContent =calcDEF();
+  document.getElementById("bs-flee").textContent=calcFLEE();
+}
+
+function renderTopbar(){
+  document.getElementById("h-lv").textContent  =G.lv;
+  document.getElementById("h-jlv").textContent =G.jobLv;
+  document.getElementById("h-hp").textContent  =Math.floor(G.hp);
+  document.getElementById("h-atk").textContent =calcATK();
+  document.getElementById("h-matk").textContent=calcMATK();
+  document.getElementById("h-dps").textContent =fmt(calcAutoDps()+calcHeroDps());
+  document.getElementById("h-apts").textContent=G.attrPoints;
+  document.getElementById("h-spts").textContent=G.skillPoints;
+  document.getElementById("h-wave").textContent=G.wave;
+}
+
+function updateEnemyBar(){
+  if(!G.enemy)return;
+  document.getElementById("e-hp-fill").style.width=Math.max(0,(G.eHp/G.eMaxHp)*100).toFixed(1)+"%";
+  document.getElementById("e-hp-txt").textContent=fmt(Math.max(0,G.eHp))+"/"+fmt(G.eMaxHp);
+}
+
+// ── SKILLS TAB ──
+function renderSkillsTab(){
+  const skPts=G.skillPoints;
+  const jobSkIds=(JOB_SKILLS[G.job]||[]);
+
+  // Group by: Base Skills / Unlocked via skill tree
+  const baseSkills   = jobSkIds.filter(id=>!(SKILL_DB[id]?.prereqs?.length));
+  const treeSkills   = jobSkIds.filter(id=> (SKILL_DB[id]?.prereqs?.length));
+  // Also include unlocked skills not in base job list
+  const extraSkills  = Object.keys(G.skills).filter(id=>!jobSkIds.includes(id)&&id in SKILL_DB);
+
+  let html = `<div class="sk-pts-row">
+    <span class="sk-pts-label">Skill Points Available</span>
+    <span class="sk-pts-val">${skPts}</span>
+  </div>`;
+
+  const renderSkBlock = (ids, label) => {
+    if(!ids.length) return "";
+    let s = `<div class="sk-category"><div class="sk-cat-hdr">${label}</div>`;
+    for(const sid of ids){
+      if(!(sid in G.skills)) continue;
+      const sd=SKILL_DB[sid]; if(!sd) continue;
+      const lv=G.skills[sid]||0;
+      const can=canLearnSkill(sid);
+      const avail=isSkillAvailable(sid);
+      const state=lv>=sd.levels?"maxed":lv>0?"learned":can?"available":avail?"available":"locked";
+      const eff=lv>0?sd.effectPerLv(lv):sd.effectPerLv(1);
+
+      // Prereq label
+      const prereqTxt=(sd.prereqs||[]).map(r=>{
+        const psd=SKILL_DB[r.id]; return (psd?.name||r.id)+" Lv."+r.lv;
+      }).join(", ");
+
+      // Unlock chain label
+      const unlockTxt=(sd.unlocks||[]).map(uid=>SKILL_DB[uid]?.name||uid).join(", ");
+
+      s+=`<div class="sk-node ${state} ${sd.passive?"passive-glow":""}">
+        <div class="sk-node-hdr">
+          <div class="sk-node-left">
+            <div class="sk-node-icon">${sd.icon}</div>
+            <div class="sk-node-info">
+              <div class="sknm">${sd.name}</div>
+              <div class="sktp">${sd.type}${sd.passive?" · PASSIVE":""}</div>
+              ${prereqTxt?`<div class="sklk">Requires: ${prereqTxt}</div>`:""}
+            </div>
+          </div>
+          <div class="sk-lv-ctrl">
+            <div class="sk-lv-num">${lv}<span class="sk-lv-max">/${sd.levels}</span></div>
+            <button class="sk-plus-btn" onclick="learnSkill('${sid}')" ${!can?"disabled":""}>+</button>
+          </div>
+        </div>
+
+        ${lv>0||avail?`
+        <div class="sk-infobox">
+          ${!sd.passive?`
+          <div class="sk-ib-row"><div class="sk-ib-key">Type</div><div class="sk-ib-val">${sd.type}</div></div>
+          ${sd.spCost&&sd.spCost[lv>0?lv-1:0]?`<div class="sk-ib-row"><div class="sk-ib-key">SP Cost</div><div class="sk-ib-val">${sd.spCost[lv>0?lv-1:0]} SP</div></div>`:""}
+          ${sd.castTime&&sd.castTime[lv>0?lv-1:0]?`<div class="sk-ib-row"><div class="sk-ib-key">Cast Time</div><div class="sk-ib-val">${sd.castTime[lv>0?lv-1:0]}s</div></div>`:""}
+          ${sd.cooldown&&sd.cooldown[lv>0?lv-1:0]?`<div class="sk-ib-row"><div class="sk-ib-key">Cooldown</div><div class="sk-ib-val">${sd.cooldown[lv>0?lv-1:0]}s</div></div>`:""}
+          ${sd.duration&&sd.duration[lv>0?lv-1:0]?`<div class="sk-ib-row"><div class="sk-ib-key">Duration</div><div class="sk-ib-val">${sd.duration[lv>0?lv-1:0]}s</div></div>`:""}
+          <div class="sk-ib-row"><div class="sk-ib-key">Target</div><div class="sk-ib-val">${sd.target}</div></div>
+          <div class="sk-ib-row"><div class="sk-ib-key">Range</div><div class="sk-ib-val">${sd.range}</div></div>
+          ${sd.area&&sd.area!=="—"?`<div class="sk-ib-row"><div class="sk-ib-key">Area</div><div class="sk-ib-val">${sd.area}</div></div>`:""}
+          <div class="sk-ib-row"><div class="sk-ib-key">Element</div><div class="sk-ib-val">${sd.element}</div></div>
+          ${sd.catalyst?`<div class="sk-ib-row"><div class="sk-ib-key">Catalyst</div><div class="sk-ib-val">${sd.catalyst}</div></div>`:""}
+          `:""}
+          <div class="sk-ib-row"><div class="sk-ib-key">Effect</div><div class="sk-ib-val effect">${eff.desc}</div></div>
+          ${lv>0&&sd.levels>1?`<div class="sk-ib-row"><div class="sk-ib-key">All Levels</div>
+            <div class="sk-ib-val level-table">
+              ${Array.from({length:sd.levels},(_,i)=>{
+                const e2=sd.effectPerLv(i+1);
+                return `<span class="lv-cell ${i+1===lv?"cur":""}">Lv${i+1}</span>`;
+              }).join("")}
+            </div></div>`:""}
+          ${!sd.passive&&lv>0?`<div class="sk-ib-row"><div class="sk-ib-key">⚡ Use</div>
+            <div class="sk-ib-val"><button onclick="activateSkill('${sid}')" style="padding:3px 10px;border:1px solid var(--crimson);background:var(--crimson-l);color:var(--crimson);font-family:'Cinzel',serif;font-size:var(--fs-info);cursor:pointer;letter-spacing:1px;">CAST</button>
+            ${SKcds[sid]>0?`<span style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-info);color:var(--orange2);margin-left:6px;">CD: ${SKcds[sid]}s</span>`:""}
+            </div></div>`:""}
+        </div>
+        ${unlockTxt&&lv>0?`<div class="sk-chain">Unlocks: ${unlockTxt}</div>`:""}
+        `:"<div style='font-size:var(--fs-info);color:var(--dim);margin-top:5px'>Learn prerequisites to unlock this skill.</div>"}
+      </div>`;
+    }
+    s+="</div>";
+    return s;
+  };
+
+  html += renderSkBlock(baseSkills, "Base Skills");
+  html += renderSkBlock(treeSkills, "Skill Tree");
+  if(extraSkills.length) html += renderSkBlock(extraSkills, "Advanced Skills");
+
+  document.getElementById("tab-body").innerHTML=html;
+}
+
+// ── MAP TAB ──
+function renderMapTab(){
+  document.getElementById("tab-body").innerHTML=WORLD_MAPS.map((z,i)=>{
+    const lk=G.lv<z.lvReq, cur=G.zoneIdx===i;
+    const ms=z.monsters.filter(m=>!m.boss).map(m=>m.e+m.n).join("  ");
+    return `<div class="zone-card ${cur?"cur":""} ${lk?"lk":""}" onclick="${lk?"toast('Need Lv."+z.lvReq+"')":"travelTo("+i+")"}">
+      <div class="z-hdr">
+        <div><div class="z-country">${z.country}</div>
+        <div class="z-name ${cur?"cur":""}">${cur?"● ":""}${z.name}</div></div>
+        <div class="z-badge ${cur?"cur":lk?"lk":"ok"}">${cur?"Current":lk?"Lv"+z.lvReq+" Req":"Lv"+z.lvReq+"+"}</div>
+      </div>
+      <div class="z-desc">${z.type} · Rec. Lv ${z.lvRec}</div>
+      <div class="z-mults">EXP ×${z.expM.toFixed(1)} · Zeny ×${z.zenyM.toFixed(1)}</div>
+      <div class="z-monsters">${ms}</div>
+    </div>`;
+  }).join("");
+}
+
+// ── INV TAB ──
+function renderInvTab(){
+  if(!G.inv.length){document.getElementById("tab-body").innerHTML='<div style="padding:8px;color:var(--dim);font-size:var(--fs-body)">Empty</div>';return;}
+  document.getElementById("tab-body").innerHTML=G.inv.map(s=>{
+    const it=ITEMS[s.id]; if(!it)return"";
+    const c=it.cat==="Consumable";
+    return `<div class="inv-row">
+      <div class="ir-l"><div class="ir-n">${it.n}</div>
+      <div class="ir-c">${it.cat}${it.atk?" ATK "+it.atk:""}${it.def?" DEF "+it.def:""}${it.matk?" MATK "+it.matk:""}</div></div>
+      <div class="ir-r"><span class="ir-q">×${s.q}</span>
+      ${c?`<span class="pill use" onclick="useItem('${s.id}')">Use</span>`:""}
+      <span class="pill sell" onclick="sellItem('${s.id}')">Sell</span></div>
+    </div>`;
+  }).join("");
+}
+
+// ── UPGRADES TAB ──
+function renderUpgTab(){
+  document.getElementById("tab-body").innerHTML=UPGRADES.map(u=>{
+    const cur=G.upgrades[u.id]||0;
+    const cost=Math.floor(u.cost*Math.pow(1.65,cur));
+    const mx=cur>=u.maxLv, can=!mx&&G.zeny>=cost;
+    return `<div class="upg-card ${can?"buy":""} ${mx?"mx":""}" onclick="${!mx?"buyUpgrade('"+u.id+"')":""}">
+      <div class="u-hdr"><div class="u-name">${u.n}</div><div class="u-lv">Lv.${cur}/${u.maxLv}</div></div>
+      <div class="u-desc">${u.desc}</div>
+      <div class="u-cost">${mx?"✓ Maxed":fmt(cost)+" z"}</div>
+    </div>`;
+  }).join("");
+}
+
+// ── HEROES TAB ──
+function renderHeroesTab(){
+  document.getElementById("tab-body").innerHTML=HEROES.map(hd=>{
+    const cur=G.heroes[hd.id]||0;
+    const cost=cur===0?hd.lvCost:Math.floor(hd.upCost*Math.pow(1.5,cur));
+    const mx=cur>=hd.lvMax, can=!mx&&G.zeny>=cost;
+    const dps=cur>0?hd.baseDps*cur:0;
+    return `<div class="hero-card ${cur>0?"unlocked":""} ${cur===0&&!can?"locked":""}">
+      <div class="h-top">
+        <div><div class="h-name">${hd.e} ${hd.n}</div><div class="h-sub">${cur>0?fmt(dps)+" DPS":"Not hired"}</div></div>
+        <div style="text-align:right"><div class="h-lv">Lv.${cur}/${hd.lvMax}</div></div>
+      </div>
+      ${cur>0?`<div class="h-bar-track"><div class="h-bar-fill" style="width:${(cur/hd.lvMax*100).toFixed(1)}%"></div></div>`:""}
+      <button class="hire-btn" onclick="hireOrUpgradeHero('${hd.id}')" ${mx?"disabled":""}>
+        ${mx?"✓ Maxed":cur===0?"Hire — "+fmt(cost)+"z":"Upgrade Lv."+(cur+1)+" — "+fmt(cost)+"z"}
+      </button>
+    </div>`;
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════════
+function log(type,msg){
+  const el=document.getElementById("log");
+  const d=document.createElement("div");
+  const ts=new Date().toLocaleTimeString("en",{hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  d.className="lg "+type;
+  d.innerHTML=`<span class="ts">${ts}</span>${msg}`;
+  el.appendChild(d);
+  while(el.children.length>80)el.removeChild(el.firstChild);
+  el.scrollTop=el.scrollHeight;
+}
+function spawnFloat(x,y,txt,cls){
+  const d=document.createElement("div");
+  d.className="dmg-float "+(cls||"df-click");
+  d.textContent=txt; d.style.left=(x-20)+"px"; d.style.top=(y-30)+"px";
+  document.body.appendChild(d); d.addEventListener("animationend",()=>d.remove());
+}
+function fmt(n){
+  if(n>=1e9)return(n/1e9).toFixed(2)+"B";
+  if(n>=1e6)return(n/1e6).toFixed(2)+"M";
+  if(n>=1e3)return(n/1e3).toFixed(1)+"K";
+  return Math.floor(n).toString();
+}
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.style.opacity="1";
+  clearTimeout(toastTmr);
+  toastTmr=setTimeout(()=>t.style.opacity="0",2500);
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("cmd-in")?.addEventListener("keydown",e=>{if(e.key==="Enter")sendCmd();});
+  document.querySelectorAll(".c-opt").forEach(el=>{
+    el.addEventListener("click",()=>{
+      document.querySelectorAll(".c-opt").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on");
+    });
+  });
+});
+</script>
+</body>
+</html>
