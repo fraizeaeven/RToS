@@ -1,0 +1,768 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-02",
+  "metadata": {
+    "totalItems": 250,
+    "totalMonsters": 180,
+    "totalJobs": 18,
+    "totalSkills": 350
+  },
+  "items": {
+    "001": {
+      "id": "001",
+      "name": "Phracon",
+      "category": "Material",
+      "weight": 1,
+      "buyPrice": 2500,
+      "sellPrice": 750,
+      "description": "A hard material used for strengthening equipment",
+      "rarity": "common",
+      "dropMonsters": ["Poring", "Lunatic"]
+    },
+    "002": {
+      "id": "002",
+      "name": "Emveretarcon",
+      "category": "Material",
+      "weight": 1,
+      "buyPrice": 5000,
+      "sellPrice": 1500,
+      "description": "Material for equipment refinement",
+      "rarity": "uncommon",
+      "dropMonsters": ["Rocker", "Thief Bug"]
+    },
+    "003": {
+      "id": "003",
+      "name": "Elunium",
+      "category": "Material",
+      "weight": 2,
+      "buyPrice": 8000,
+      "sellPrice": 2400,
+      "description": "Precious material for upgrading armor",
+      "rarity": "uncommon",
+      "dropMonsters": ["Archer Skeleton", "Creamy"]
+    },
+    "004": {
+      "id": "004",
+      "name": "Oridecon",
+      "category": "Material",
+      "weight": 2,
+      "buyPrice": 8000,
+      "sellPrice": 2400,
+      "description": "Precious material for upgrading weapons",
+      "rarity": "uncommon",
+      "dropMonsters": ["Mummy", "Cramp"]
+    },
+    "005": {
+      "id": "005",
+      "name": "Iron Ore",
+      "category": "Material",
+      "weight": 3,
+      "buyPrice": 1000,
+      "sellPrice": 300,
+      "description": "Raw material for blacksmith crafting",
+      "rarity": "common",
+      "dropMonsters": ["Poring", "Chonchon"]
+    },
+    "100": {
+      "id": "100",
+      "name": "Short Sword",
+      "category": "Weapon",
+      "weight": 45,
+      "buyPrice": 500,
+      "sellPrice": 150,
+      "description": "A basic sword for beginners",
+      "rarity": "common",
+      "requiredLevel": 1,
+      "damage": 24,
+      "armor": 0,
+      "slots": 0
+    },
+    "101": {
+      "id": "101",
+      "name": "Broadsword",
+      "category": "Weapon",
+      "weight": 85,
+      "buyPrice": 2000,
+      "sellPrice": 600,
+      "description": "A well-balanced sword with decent damage",
+      "rarity": "uncommon",
+      "requiredLevel": 10,
+      "damage": 48,
+      "armor": 0,
+      "slots": 1
+    },
+    "102": {
+      "id": "102",
+      "name": "Claymore",
+      "category": "Weapon",
+      "weight": 138,
+      "buyPrice": 5000,
+      "sellPrice": 1500,
+      "description": "A massive sword for skilled warriors",
+      "rarity": "rare",
+      "requiredLevel": 25,
+      "damage": 95,
+      "armor": 0,
+      "slots": 1
+    },
+    "200": {
+      "id": "200",
+      "name": "Coat",
+      "category": "Armor",
+      "weight": 35,
+      "buyPrice": 400,
+      "sellPrice": 120,
+      "description": "Light armor providing basic protection",
+      "rarity": "common",
+      "requiredLevel": 1,
+      "armor": 6,
+      "slots": 1
+    },
+    "201": {
+      "id": "201",
+      "name": "Leather Armor",
+      "category": "Armor",
+      "weight": 55,
+      "buyPrice": 1200,
+      "sellPrice": 360,
+      "description": "Leather protection for warriors",
+      "rarity": "uncommon",
+      "requiredLevel": 10,
+      "armor": 12,
+      "slots": 1
+    },
+    "202": {
+      "id": "202",
+      "name": "Plate Armor",
+      "category": "Armor",
+      "weight": 95,
+      "buyPrice": 3500,
+      "sellPrice": 1050,
+      "description": "Heavy plate armor for experienced warriors",
+      "rarity": "uncommon",
+      "requiredLevel": 20,
+      "armor": 22,
+      "slots": 1
+    },
+    "300": {
+      "id": "300",
+      "name": "Cotton Shirt",
+      "category": "Equipment",
+      "weight": 15,
+      "buyPrice": 200,
+      "sellPrice": 60,
+      "description": "Basic upper body garment",
+      "rarity": "common",
+      "requiredLevel": 1,
+      "armor": 2,
+      "slots": 1
+    },
+    "301": {
+      "id": "301",
+      "name": "Leather Glove",
+      "category": "Equipment",
+      "weight": 8,
+      "buyPrice": 300,
+      "sellPrice": 90,
+      "description": "Protective glove for hands",
+      "rarity": "common",
+      "requiredLevel": 1,
+      "armor": 1,
+      "slots": 1
+    },
+    "302": {
+      "id": "302",
+      "name": "Mithril Glove",
+      "category": "Equipment",
+      "weight": 12,
+      "buyPrice": 1500,
+      "sellPrice": 450,
+      "description": "Glove enhanced with Mithril",
+      "rarity": "uncommon",
+      "requiredLevel": 15,
+      "armor": 4,
+      "slots": 1
+    },
+    "400": {
+      "id": "400",
+      "name": "Red Potion",
+      "category": "Consumable",
+      "weight": 3,
+      "buyPrice": 50,
+      "sellPrice": 15,
+      "description": "Restores 45 HP",
+      "rarity": "common",
+      "effect": "healHP",
+      "effectValue": 45
+    },
+    "401": {
+      "id": "401",
+      "name": "Yellow Potion",
+      "category": "Consumable",
+      "weight": 3,
+      "buyPrice": 100,
+      "sellPrice": 30,
+      "description": "Restores 150 HP",
+      "rarity": "common",
+      "effect": "healHP",
+      "effectValue": 150
+    },
+    "402": {
+      "id": "402",
+      "name": "Blue Potion",
+      "category": "Consumable",
+      "weight": 3,
+      "buyPrice": 100,
+      "sellPrice": 30,
+      "description": "Restores 40 SP",
+      "rarity": "common",
+      "effect": "healSP",
+      "effectValue": 40
+    },
+    "403": {
+      "id": "403",
+      "name": "White Potion",
+      "category": "Consumable",
+      "weight": 3,
+      "buyPrice": 1500,
+      "sellPrice": 450,
+      "description": "Restores 200 HP and 100 SP",
+      "rarity": "uncommon",
+      "effect": "healBoth",
+      "effectHP": 200,
+      "effectSP": 100
+    }
+  },
+  "monsters": {
+    "1001": {
+      "id": "1001",
+      "name": "Poring",
+      "level": 1,
+      "hp": 10,
+      "maxHp": 10,
+      "exp": 3,
+      "jobExp": 4,
+      "locations": ["Prontera Field", "Izlude Field"],
+      "drops": [
+        { "itemId": "001", "chance": 80, "quantity": 1 },
+        { "itemId": "005", "chance": 20, "quantity": 1 }
+      ],
+      "skills": ["Demi Human"],
+      "description": "A small gelatinous monster",
+      "size": "Small",
+      "race": "Demi-Human",
+      "element": "Water",
+      "weakness": ["Fire"]
+    },
+    "1002": {
+      "id": "1002",
+      "name": "Lunatic",
+      "level": 2,
+      "hp": 15,
+      "maxHp": 15,
+      "exp": 5,
+      "jobExp": 7,
+      "locations": ["Prontera Field"],
+      "drops": [
+        { "itemId": "001", "chance": 70, "quantity": 1 },
+        { "itemId": "005", "chance": 30, "quantity": 1 }
+      ],
+      "skills": ["Basic Attack"],
+      "description": "A small flying poring variant",
+      "size": "Small",
+      "race": "Demi-Human",
+      "element": "Wind",
+      "weakness": ["Water"]
+    },
+    "1003": {
+      "id": "1003",
+      "name": "Chonchon",
+      "level": 3,
+      "hp": 18,
+      "maxHp": 18,
+      "exp": 8,
+      "jobExp": 10,
+      "locations": ["Prontera Field", "Mjolnir Field"],
+      "drops": [
+        { "itemId": "005", "chance": 50, "quantity": 1 }
+      ],
+      "skills": ["Buzz Attack"],
+      "description": "A small flying bee-like monster",
+      "size": "Small",
+      "race": "Insect",
+      "element": "Wind",
+      "weakness": ["Fire"]
+    },
+    "1004": {
+      "id": "1004",
+      "name": "Rocker",
+      "level": 5,
+      "hp": 30,
+      "maxHp": 30,
+      "exp": 15,
+      "jobExp": 18,
+      "locations": ["Prontera Field", "Mjolnir Field"],
+      "drops": [
+        { "itemId": "002", "chance": 60, "quantity": 1 },
+        { "itemId": "005", "chance": 40, "quantity": 2 }
+      ],
+      "skills": ["Rock Throw"],
+      "description": "A living stone creature",
+      "size": "Medium",
+      "race": "Formless",
+      "element": "Earth",
+      "weakness": ["Wind"]
+    },
+    "1005": {
+      "id": "1005",
+      "name": "Creamy",
+      "level": 6,
+      "hp": 35,
+      "maxHp": 35,
+      "exp": 18,
+      "jobExp": 22,
+      "locations": ["Izlude Field", "Geffen Field"],
+      "drops": [
+        { "itemId": "003", "chance": 50, "quantity": 1 },
+        { "itemId": "001", "chance": 35, "quantity": 1 }
+      ],
+      "skills": ["Horn Attack"],
+      "description": "A creature with horn protection",
+      "size": "Medium",
+      "race": "Demi-Human",
+      "element": "Fire",
+      "weakness": ["Water"]
+    },
+    "1006": {
+      "id": "1006",
+      "name": "Thief Bug",
+      "level": 7,
+      "hp": 40,
+      "maxHp": 40,
+      "exp": 22,
+      "jobExp": 26,
+      "locations": ["Payon Field", "Geffen Field"],
+      "drops": [
+        { "itemId": "002", "chance": 55, "quantity": 1 },
+        { "itemId": "005", "chance": 45, "quantity": 2 }
+      ],
+      "skills": ["Backstab", "Steal"],
+      "description": "A thieving insect creature",
+      "size": "Small",
+      "race": "Insect",
+      "element": "Earth",
+      "weakness": ["Fire"]
+    },
+    "1007": {
+      "id": "1007",
+      "name": "Archer Skeleton",
+      "level": 10,
+      "hp": 60,
+      "maxHp": 60,
+      "exp": 40,
+      "jobExp": 50,
+      "locations": ["Payon Dungeon", "Geffen Dungeon"],
+      "drops": [
+        { "itemId": "003", "chance": 65, "quantity": 1 },
+        { "itemId": "004", "chance": 20, "quantity": 1 }
+      ],
+      "skills": ["Arrow Attack", "Multi Shot"],
+      "description": "A skeleton wielding a bow",
+      "size": "Medium",
+      "race": "Undead",
+      "element": "Undead",
+      "weakness": ["Holy"]
+    },
+    "1008": {
+      "id": "1008",
+      "name": "Mummy",
+      "level": 15,
+      "hp": 85,
+      "maxHp": 85,
+      "exp": 75,
+      "jobExp": 95,
+      "locations": ["Mummy Dungeon", "Sphinx Dungeon"],
+      "drops": [
+        { "itemId": "004", "chance": 70, "quantity": 1 },
+        { "itemId": "003", "chance": 30, "quantity": 1 }
+      ],
+      "skills": ["Curse Touch", "Decay"],
+      "description": "A cursed wrapped corpse",
+      "size": "Large",
+      "race": "Undead",
+      "element": "Undead",
+      "weakness": ["Fire", "Holy"]
+    }
+  },
+  "jobs": {
+    "001": {
+      "id": "001",
+      "name": "Novice",
+      "description": "The starting class for all adventurers",
+      "baseStats": {
+        "strength": 1,
+        "agility": 1,
+        "vitality": 1,
+        "intelligence": 1,
+        "wisdom": 1,
+        "luck": 1
+      },
+      "skills": ["Basic Attack", "Skill Point"],
+      "startingWeapon": "100",
+      "startingArmor": "200"
+    },
+    "002": {
+      "id": "002",
+      "name": "Swordsman",
+      "description": "A warrior specializing in melee combat with swords",
+      "baseStats": {
+        "strength": 4,
+        "agility": 2,
+        "vitality": 3,
+        "intelligence": 1,
+        "wisdom": 2,
+        "luck": 1
+      },
+      "skills": ["Bash", "Magnum Break", "Provoke"],
+      "startingWeapon": "100",
+      "startingArmor": "200",
+      "advancedJobs": ["Knight", "Crusader"]
+    },
+    "003": {
+      "id": "003",
+      "name": "Mage",
+      "description": "A spellcaster wielding the power of magic",
+      "baseStats": {
+        "strength": 1,
+        "agility": 1,
+        "vitality": 1,
+        "intelligence": 4,
+        "wisdom": 3,
+        "luck": 1
+      },
+      "skills": ["Fire Bolt", "Cold Bolt", "Lightning Bolt"],
+      "startingWeapon": "100",
+      "startingArmor": "200",
+      "advancedJobs": ["Wizard", "Sage"]
+    },
+    "004": {
+      "id": "004",
+      "name": "Archer",
+      "description": "A skilled archer with precise ranged attacks",
+      "baseStats": {
+        "strength": 2,
+        "agility": 4,
+        "vitality": 1,
+        "intelligence": 1,
+        "wisdom": 2,
+        "luck": 2
+      },
+      "skills": ["Arrow Shower", "Aimed Shot", "Snipe"],
+      "startingWeapon": "100",
+      "startingArmor": "200",
+      "advancedJobs": ["Hunter", "Ranger"]
+    },
+    "005": {
+      "id": "005",
+      "name": "Acolyte",
+      "description": "A healer devoted to support and recovery magic",
+      "baseStats": {
+        "strength": 1,
+        "agility": 2,
+        "vitality": 2,
+        "intelligence": 2,
+        "wisdom": 4,
+        "luck": 1
+      },
+      "skills": ["Heal", "Blessing", "Cure"],
+      "startingWeapon": "100",
+      "startingArmor": "200",
+      "advancedJobs": ["Priest", "Monk"]
+    },
+    "006": {
+      "id": "006",
+      "name": "Thief",
+      "description": "A stealthy rogue with high agility",
+      "baseStats": {
+        "strength": 2,
+        "agility": 4,
+        "vitality": 1,
+        "intelligence": 1,
+        "wisdom": 1,
+        "luck": 3
+      },
+      "skills": ["Steal", "Backstab", "Escape"],
+      "startingWeapon": "100",
+      "startingArmor": "200",
+      "advancedJobs": ["Assassin", "Rogue"]
+    },
+    "007": {
+      "id": "007",
+      "name": "Knight",
+      "description": "An advanced warrior with heavy armor and sword expertise",
+      "baseStats": {
+        "strength": 5,
+        "agility": 3,
+        "vitality": 4,
+        "intelligence": 1,
+        "wisdom": 2,
+        "luck": 1
+      },
+      "requiredLevel": 10,
+      "prerequisiteJob": "002",
+      "skills": ["Slash", "Pecopeco Ride", "Brandish Spear"],
+      "startingWeapon": "101",
+      "startingArmor": "201"
+    },
+    "008": {
+      "id": "008",
+      "name": "Wizard",
+      "description": "An advanced mage with powerful spells",
+      "baseStats": {
+        "strength": 1,
+        "agility": 1,
+        "vitality": 1,
+        "intelligence": 5,
+        "wisdom": 4,
+        "luck": 1
+      },
+      "requiredLevel": 10,
+      "prerequisiteJob": "003",
+      "skills": ["Meteor Storm", "Frost Diver", "Thunderstorm"],
+      "startingWeapon": "100",
+      "startingArmor": "201"
+    }
+  },
+  "skills": {
+    "001": {
+      "id": "001",
+      "name": "Bash",
+      "description": "A basic sword attack with increased damage",
+      "job": "Swordsman",
+      "type": "Physical",
+      "maxLevel": 10,
+      "spCost": [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      "cooldown": 3,
+      "range": 1,
+      "target": "Single Enemy",
+      "levelUp": "1,2,3,4,5,6,7,8,9,10"
+    },
+    "002": {
+      "id": "002",
+      "name": "Fire Bolt",
+      "description": "Shoot a bolt of fire at an enemy",
+      "job": "Mage",
+      "type": "Magic",
+      "maxLevel": 10,
+      "spCost": [10, 12, 14, 16, 18, 20, 22, 24, 26, 28],
+      "cooldown": 2,
+      "range": 5,
+      "target": "Single Enemy",
+      "damage": "INT-based",
+      "castTime": 1.5
+    },
+    "003": {
+      "id": "003",
+      "name": "Cold Bolt",
+      "description": "Shoot a bolt of ice at an enemy",
+      "job": "Mage",
+      "type": "Magic",
+      "maxLevel": 10,
+      "spCost": [10, 12, 14, 16, 18, 20, 22, 24, 26, 28],
+      "cooldown": 2,
+      "range": 5,
+      "target": "Single Enemy",
+      "damage": "INT-based",
+      "castTime": 1.5
+    },
+    "004": {
+      "id": "004",
+      "name": "Heal",
+      "description": "Restore HP to yourself or an ally",
+      "job": "Acolyte",
+      "type": "Magic",
+      "maxLevel": 10,
+      "spCost": [14, 16, 18, 20, 22, 24, 26, 28, 30, 32],
+      "cooldown": 1,
+      "range": 9,
+      "target": "Self or Party Member",
+      "healAmount": "WIS-based",
+      "castTime": 1.5
+    },
+    "005": {
+      "id": "005",
+      "name": "Steal",
+      "description": "Attempt to steal an item from an enemy",
+      "job": "Thief",
+      "type": "Physical",
+      "maxLevel": 10,
+      "spCost": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30],
+      "cooldown": 3,
+      "range": 1,
+      "target": "Single Enemy",
+      "successRate": "AGI-based"
+    },
+    "006": {
+      "id": "006",
+      "name": "Provoke",
+      "description": "Taunt an enemy to attack you",
+      "job": "Swordsman",
+      "type": "Status",
+      "maxLevel": 10,
+      "spCost": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "cooldown": 5,
+      "range": 9,
+      "target": "Single Enemy",
+      "effect": "Increases enemy's attention"
+    },
+    "007": {
+      "id": "007",
+      "name": "Arrow Shower",
+      "description": "Rain arrows down on enemies in an area",
+      "job": "Archer",
+      "type": "Physical",
+      "maxLevel": 10,
+      "spCost": [18, 20, 22, 24, 26, 28, 30, 32, 34, 36],
+      "cooldown": 4,
+      "range": 9,
+      "target": "Area of Effect",
+      "castTime": 2,
+      "areaRadius": 5
+    },
+    "008": {
+      "id": "008",
+      "name": "Blessing",
+      "description": "Bless an ally with increased stats",
+      "job": "Acolyte",
+      "type": "Magic",
+      "maxLevel": 10,
+      "spCost": [20, 22, 24, 26, 28, 30, 32, 34, 36, 38],
+      "cooldown": 2,
+      "range": 9,
+      "target": "Single Ally",
+      "duration": 180,
+      "effect": "Increases STR and DEX"
+    }
+  },
+  "locations": {
+    "001": {
+      "id": "001",
+      "name": "Prontera",
+      "description": "The capital of Rune-Midgard, center of civilization",
+      "type": "City",
+      "connections": ["Izlude", "Payon", "Geffen"],
+      "npcs": ["Kafra", "Tool Dealer", "Armor Dealer", "Weapon Dealer"]
+    },
+    "002": {
+      "id": "002",
+      "name": "Prontera Field",
+      "description": "Fields surrounding Prontera, peaceful for beginners",
+      "type": "Field",
+      "levelRange": "1-15",
+      "monsters": ["Poring", "Lunatic", "Chonchon"],
+      "connections": ["Prontera", "Mjolnir Field"]
+    },
+    "003": {
+      "id": "003",
+      "name": "Izlude",
+      "description": "A quiet port town east of Prontera",
+      "type": "City",
+      "connections": ["Prontera", "Izlude Field"],
+      "npcs": ["Kafra", "Weapon Dealer", "Guard"]
+    },
+    "004": {
+      "id": "004",
+      "name": "Izlude Field",
+      "description": "Fields around Izlude with various monsters",
+      "type": "Field",
+      "levelRange": "5-20",
+      "monsters": ["Poring", "Creamy", "Rocker"],
+      "connections": ["Izlude", "Prontera Field"]
+    },
+    "005": {
+      "id": "005",
+      "name": "Payon",
+      "description": "A mystical town surrounded by forests",
+      "type": "City",
+      "connections": ["Prontera", "Payon Field", "Payon Dungeon"],
+      "npcs": ["Kafra", "Sage"]
+    },
+    "006": {
+      "id": "006",
+      "name": "Geffen",
+      "description": "A magical town known for arcane research",
+      "type": "City",
+      "connections": ["Prontera", "Geffen Field", "Geffen Dungeon"],
+      "npcs": ["Kafra", "Wizard Apprentice", "Mage Guild"]
+    }
+  },
+  "quests": {
+    "001": {
+      "id": "001",
+      "name": "Poring Hunt",
+      "description": "Hunt 10 Porings and bring proof to the Guard",
+      "giver": "Guard",
+      "giver_location": "Prontera",
+      "levelRequired": 1,
+      "reward_exp": 100,
+      "reward_zeny": 500,
+      "reward_items": [
+        { "itemId": "400", "quantity": 5 }
+      ],
+      "objectives": [
+        { "type": "hunt", "monster": "Poring", "quantity": 10 }
+      ]
+    },
+    "002": {
+      "id": "002",
+      "name": "Material Collection",
+      "description": "Collect Iron Ore for the Blacksmith",
+      "giver": "Blacksmith",
+      "giver_location": "Prontera",
+      "levelRequired": 5,
+      "reward_exp": 250,
+      "reward_zeny": 1000,
+      "objectives": [
+        { "type": "collect", "item": "005", "quantity": 10 }
+      ]
+    },
+    "003": {
+      "id": "003",
+      "name": "Thief Bug Extermination",
+      "description": "Hunt Thief Bugs and retrieve stolen goods",
+      "giver": "Captain",
+      "giver_location": "Payon",
+      "levelRequired": 7,
+      "reward_exp": 400,
+      "reward_zeny": 2000,
+      "reward_items": [
+        { "itemId": "301", "quantity": 1 }
+      ],
+      "objectives": [
+        { "type": "hunt", "monster": "Thief Bug", "quantity": 8 }
+      ]
+    }
+  },
+  "equipment_stats": {
+    "weapon_modifiers": {
+      "One-Handed Sword": { "attack": 1.0, "weight": 1.0 },
+      "Two-Handed Sword": { "attack": 1.5, "weight": 1.8 },
+      "Dagger": { "attack": 0.6, "weight": 0.5 },
+      "Staff": { "attack": 0.8, "weight": 1.2, "spCost": -10 }
+    },
+    "armor_modifiers": {
+      "Light Armor": { "defense": 0.8, "weight": 0.7 },
+      "Medium Armor": { "defense": 1.0, "weight": 1.0 },
+      "Heavy Armor": { "defense": 1.3, "weight": 1.4 },
+      "Robe": { "defense": 0.5, "weight": 0.5, "spCost": -5 }
+    }
+  },
+  "stat_descriptions": {
+    "strength": "Increases physical attack and carrying capacity",
+    "agility": "Increases attack speed and dodge rate",
+    "vitality": "Increases HP and physical defense",
+    "intelligence": "Increases magical attack and SP",
+    "wisdom": "Increases SP recovery and magical defense",
+    "luck": "Increases critical hit rate and item drop chance"
+  }
+}

@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ragnarok Online - AI Text Adventure RPG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #0a0e27;
+            color: #c0c0c0;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        .game-container {
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+        }
+
+        /* LEFT SIDEBAR - CHARACTER & STATS */
+        .sidebar {
+            width: 280px;
+            background: rgba(26, 31, 58, 0.9);
+            border-right: 2px solid #d4af37;
+            padding: 1.5rem;
+            overflow-y: auto;
+            box-shadow: inset -4px 0 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .character-header {
+            text-align: center;
+            border-bottom: 1px solid #d4af37;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .character-name {
+            font-size: 18px;
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .character-job {
+            font-size: 12px;
+            color: #a0a0a0;
+            margin-bottom: 0.5rem;
+        }
+
+        .character-level {
+            font-size: 11px;
+            color: #808080;
+        }
+
+        .stat-block {
+            margin-bottom: 1.2rem;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #808080;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 0.5px solid #d4af37;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4af37, #ffd700);
+            width: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .stat-value {
+            font-size: 10px;
+            color: #a0a0a0;
+            text-align: right;
+        }
+
+        .equipment-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #d4af37;
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: #ffd700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.8rem;
+            font-weight: bold;
+        }
+
+        .equipment-item {
+            font-size: 10px;
+            color: #a0a0a0;
+            margin-bottom: 0.5rem;
+            padding: 0.4rem;
+            background: rgba(212, 175, 55, 0.1);
+            border-left: 2px solid #d4af37;
+            padding-left: 0.6rem;
+        }
+
+        /* MAIN GAME AREA */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(to bottom, rgba(10, 14, 39, 0.8), rgba(26, 31, 58, 0.8));
+        }
+
+        /* HEADER */
+        .game-header {
+            background: linear-gradient(90deg, #1a1f3a 0%, #2d3561 50%, #1a1f3a 100%);
+            border-bottom: 2px solid #d4af37;
+            padding: 1rem 1.5rem;
+            text-align: center;
+        }
+
+        .game-title {
+            font-size: 24px;
+            color: #d4af37;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: 2px;
+            margin-bottom: 0.3rem;
+        }
+
+        .game-location {
+            font-size: 12px;
+            color: #a0a0a0;
+            letter-spacing: 1px;
+        }
+
+        /* GAME LOG */
+        .game-log {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: rgba(10, 14, 39, 0.5);
+            border-right: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .log-entry {
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-left: 3px solid #d4af37;
+            padding-left: 1rem;
+            background: rgba(45, 53, 97, 0.2);
+            border-radius: 2px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-entry.system {
+            border-left-color: #4caf50;
+            color: #4caf50;
+        }
+
+        .log-entry.npc {
+            border-left-color: #2196f3;
+            color: #90caf9;
+        }
+
+        .log-entry.combat {
+            border-left-color: #ff6b6b;
+            color: #ff8787;
+        }
+
+        .log-entry.success {
+            border-left-color: #4caf50;
+            color: #81c784;
+        }
+
+        .log-entry.warning {
+            border-left-color: #ffa726;
+            color: #ffb74d;
+        }
+
+        .log-timestamp {
+            font-size: 9px;
+            color: #606060;
+            margin-bottom: 0.2rem;
+        }
+
+        /* INPUT AREA */
+        .input-section {
+            background: rgba(26, 31, 58, 0.95);
+            border-top: 2px solid #d4af37;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-label {
+            font-size: 10px;
+            color: #808080;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-box {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-input {
+            flex: 1;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #d4af37;
+            color: #c0c0c0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .action-input::placeholder {
+            color: #606060;
+        }
+
+        .action-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.2);
+        }
+
+        .action-btn {
+            padding: 0.8rem 1.5rem;
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(212, 175, 55, 0.3);
+            box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.3);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* QUICK ACTIONS */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.8rem;
+        }
+
+        .quick-btn {
+            padding: 0.6rem;
+            background: transparent;
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            color: #a0a0a0;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            color: #d4af37;
+            border-color: #d4af37;
+        }
+
+        /* LOADING STATE */
+        .loading {
+            display: inline-block;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d4af37;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- LEFT SIDEBAR -->
+        <div class="sidebar">
+            <div class="character-header">
+                <div class="character-name" id="charName">Adventurer</div>
+                <div class="character-job" id="charJob">Novice</div>
+                <div class="character-level" id="charLevel">Level 1</div>
+            </div>
+
+            <!-- HP -->
+            <div class="stat-block">
+                <div class="stat-label">HP</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="hpBar" style="width: 100%;"></div>
+                </div>
+                <div class="stat-value"><span id="hpValue">40</span> / <span id="hpMax">40</span></div>
+            </div>
+
+            <!-- SP -->
+            <div class="stat-block">
+                <div class="stat-label">SP (Magic)</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="spBar" style="width: 100%;"></div>
+                </div>
+                <div class="stat-value"><span id="spValue">40</span> / <span id="spMax">40</span></div>
+            </div>
+
+            <!-- EXP -->
+            <div class="stat-block">
+                <div class="stat-label">Experience</div>
+                <div class="stat-bar">
+                    <div class="stat-bar-fill" id="expBar" style="width: 0%;"></div>
+                </div>
+                <div class="stat-value"><span id="expValue">0</span> / <span id="expMax">100</span></div>
+            </div>
+
+            <!-- STATS -->
+            <div class="stat-block" style="margin-top: 2rem;">
+                <div class="stat-label">Base Stats</div>
+                <div style="font-size: 11px; color: #a0a0a0; margin-top: 0.5rem;">
+                    <div>STR: <span id="statStr">1</span></div>
+                    <div>AGI: <span id="statAgi">1</span></div>
+                    <div>VIT: <span id="statVit">1</span></div>
+                    <div>INT: <span id="statInt">1</span></div>
+                    <div>WIS: <span id="statWis">1</span></div>
+                    <div>LCK: <span id="statLck">1</span></div>
+                </div>
+            </div>
+
+            <!-- EQUIPMENT -->
+            <div class="equipment-section">
+                <div class="section-title">Equipped</div>
+                <div class="equipment-item" id="equippedWeapon">Unarmed</div>
+                <div class="equipment-item" id="equippedArmor">No Armor</div>
+            </div>
+
+            <!-- INVENTORY BRIEF -->
+            <div class="equipment-section">
+                <div class="section-title">Inventory</div>
+                <div id="inventoryBrief" style="font-size: 10px; color: #a0a0a0;">
+                    Empty
+                </div>
+            </div>
+
+            <!-- ZENY -->
+            <div class="equipment-section">
+                <div class="stat-label">Zeny (Gold)</div>
+                <div style="font-size: 14px; color: #ffd700; font-weight: bold;">
+                    <span id="zenyAmount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <!-- HEADER -->
+            <div class="game-header">
+                <div class="game-title">⚔ RAGNAROK ONLINE ⚔</div>
+                <div class="game-location" id="locationDisplay">Prontera - Welcome Inn</div>
+            </div>
+
+            <!-- GAME LOG -->
+            <div class="game-log" id="gameLog">
+                <div class="log-entry system">
+                    <div class="log-timestamp">System</div>
+                    Welcome to Ragnarok Online Text Adventure!
+                </div>
+                <div class="log-entry system">
+                    <div class="log-timestamp">System</div>
+                    You awaken in the Welcome Inn of Prontera. Your adventure begins...
+                </div>
+            </div>
+
+            <!-- INPUT SECTION -->
+            <div class="input-section">
+                <div class="input-label">What do you do?</div>
+                <div class="input-box">
+                    <input type="text" class="action-input" id="actionInput" placeholder="Explore, attack, use item, talk to NPC, check inventory..." autocomplete="off">
+                    <button class="action-btn" id="submitBtn">EXECUTE</button>
+                </div>
+
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="executeAction('explore')">Explore Area</button>
+                    <button class="quick-btn" onclick="executeAction('check inventory')">Inventory</button>
+                    <button class="quick-btn" onclick="executeAction('check status')">Status</button>
+                    <button class="quick-btn" onclick="executeAction('rest')">Rest</button>
+                    <button class="quick-btn" onclick="executeAction('look around')">Look Around</button>
+                    <button class="quick-btn" onclick="executeAction('help')">Commands</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Embedded Database
+        const database = {
+            items: {
+                "001": { id: "001", name: "Phracon", category: "Material", weight: 1, buyPrice: 2500, sellPrice: 750, description: "Hard material for strengthening equipment", rarity: "common" },
+                "005": { id: "005", name: "Iron Ore", category: "Material", weight: 3, buyPrice: 1000, sellPrice: 300, description: "Raw material for blacksmith crafting", rarity: "common" },
+                "100": { id: "100", name: "Short Sword", category: "Weapon", weight: 45, buyPrice: 500, sellPrice: 150, description: "A basic sword for beginners", rarity: "common", damage: 24 },
+                "101": { id: "101", name: "Broadsword", category: "Weapon", weight: 85, buyPrice: 2000, sellPrice: 600, description: "Well-balanced sword", rarity: "uncommon", damage: 48 },
+                "200": { id: "200", name: "Coat", category: "Armor", weight: 35, buyPrice: 400, sellPrice: 120, description: "Light armor", rarity: "common", armor: 6 },
+                "400": { id: "400", name: "Red Potion", category: "Consumable", weight: 3, buyPrice: 50, sellPrice: 15, description: "Restores 45 HP", effect: "healHP", effectValue: 45 },
+                "401": { id: "401", name: "Yellow Potion", category: "Consumable", weight: 3, buyPrice: 100, sellPrice: 30, description: "Restores 150 HP", effect: "healHP", effectValue: 150 }
+            },
+            monsters: {
+                "1001": { id: "1001", name: "Poring", level: 1, hp: 10, exp: 3, jobExp: 4, locations: ["Prontera Field"], element: "Water", description: "A small gelatinous monster", size: "Small", race: "Demi-Human" },
+                "1002": { id: "1002", name: "Lunatic", level: 2, hp: 15, exp: 5, jobExp: 7, locations: ["Prontera Field"], element: "Wind", description: "A small flying poring variant", size: "Small", race: "Demi-Human" },
+                "1003": { id: "1003", name: "Chonchon", level: 3, hp: 18, exp: 8, jobExp: 10, locations: ["Prontera Field"], element: "Wind", description: "A small flying bee-like monster", size: "Small", race: "Insect" },
+                "1004": { id: "1004", name: "Rocker", level: 5, hp: 30, exp: 15, jobExp: 18, locations: ["Prontera Field"], element: "Earth", description: "A living stone creature", size: "Medium", race: "Formless" }
+            },
+            jobs: {
+                "001": { id: "001", name: "Novice", description: "The starting class for all adventurers", baseStats: { strength: 1, agility: 1, vitality: 1, intelligence: 1, wisdom: 1, luck: 1 }, skills: ["Basic Attack"] },
+                "002": { id: "002", name: "Swordsman", description: "A warrior specializing in melee combat", baseStats: { strength: 4, agility: 2, vitality: 3, intelligence: 1, wisdom: 2, luck: 1 }, skills: ["Bash", "Magnum Break"] },
+                "003": { id: "003", name: "Mage", description: "A spellcaster wielding the power of magic", baseStats: { strength: 1, agility: 1, vitality: 1, intelligence: 4, wisdom: 3, luck: 1 }, skills: ["Fire Bolt", "Cold Bolt"] },
+                "004": { id: "004", name: "Archer", description: "A skilled archer with precise ranged attacks", baseStats: { strength: 2, agility: 4, vitality: 1, intelligence: 1, wisdom: 2, luck: 2 }, skills: ["Arrow Shower"] }
+            },
+            locations: {
+                "001": { id: "001", name: "Prontera", type: "City", description: "The capital of Rune-Midgard", monsters: [] },
+                "002": { id: "002", name: "Prontera Field", type: "Field", description: "Fields surrounding Prontera", monsters: ["1001", "1002", "1003", "1004"] },
+                "003": { id: "003", name: "Izlude", type: "City", description: "A quiet port town", monsters: [] }
+            },
+            skills: {
+                "001": { id: "001", name: "Bash", description: "A basic sword attack with increased damage", job: "Swordsman", type: "Physical", damage: 1.2, spCost: 2 },
+                "002": { id: "002", name: "Fire Bolt", description: "Shoot a bolt of fire at an enemy", job: "Mage", type: "Magic", damage: 1.5, spCost: 10 }
+            }
+        };
+
+        // Game State
+        let gameState = {
+            playerName: "Adventurer",
+            currentJob: "Novice",
+            level: 1,
+            exp: 0,
+            expToLevel: 100,
+            hp: 40,
+            maxHp: 40,
+            sp: 40,
+            maxSp: 40,
+            zeny: 0,
+            stats: { strength: 1, agility: 1, vitality: 1, intelligence: 1, wisdom: 1, luck: 1 },
+            location: "Prontera",
+            inventory: [],
+            equipment: { weapon: null, armor: null },
+            inCombat: false,
+            currentEnemy: null,
+            combatRound: 0
+        };
+
+        // Initialize Game
+        function initGame() {
+            updateUI();
+            addLog("System", "Type 'help' to see available commands.", "system");
+        }
+
+        // Update UI
+        function updateUI() {
+            document.getElementById("charName").textContent = gameState.playerName;
+            document.getElementById("charJob").textContent = gameState.currentJob;
+            document.getElementById("charLevel").textContent = `Level ${gameState.level}`;
+            
+            const hpPercent = (gameState.hp / gameState.maxHp) * 100;
+            const spPercent = (gameState.sp / gameState.maxSp) * 100;
+            const expPercent = (gameState.exp / gameState.expToLevel) * 100;
+            
+            document.getElementById("hpBar").style.width = hpPercent + "%";
+            document.getElementById("spBar").style.width = spPercent + "%";
+            document.getElementById("expBar").style.width = expPercent + "%";
+            
+            document.getElementById("hpValue").textContent = gameState.hp;
+            document.getElementById("hpMax").textContent = gameState.maxHp;
+            document.getElementById("spValue").textContent = gameState.sp;
+            document.getElementById("spMax").textContent = gameState.maxSp;
+            document.getElementById("expValue").textContent = gameState.exp;
+            document.getElementById("expMax").textContent = gameState.expToLevel;
+            
+            document.getElementById("statStr").textContent = gameState.stats.strength;
+            document.getElementById("statAgi").textContent = gameState.stats.agility;
+            document.getElementById("statVit").textContent = gameState.stats.vitality;
+            document.getElementById("statInt").textContent = gameState.stats.intelligence;
+            document.getElementById("statWis").textContent = gameState.stats.wisdom;
+            document.getElementById("statLck").textContent = gameState.stats.luck;
+            
+            document.getElementById("zenyAmount").textContent = gameState.zeny.toLocaleString();
+            document.getElementById("locationDisplay").textContent = `${gameState.location} - ${database.locations[Object.keys(database.locations).find(k => database.locations[k].name === gameState.location)]?.description || "Unknown"}`;
+            
+            // Update equipment display
+            if (gameState.equipment.weapon) {
+                const weapon = database.items[gameState.equipment.weapon];
+                document.getElementById("equippedWeapon").textContent = weapon.name;
+            }
+            if (gameState.equipment.armor) {
+                const armor = database.items[gameState.equipment.armor];
+                document.getElementById("equippedArmor").textContent = armor.name;
+            }
+            
+            // Update inventory display
+            if (gameState.inventory.length > 0) {
+                const invText = gameState.inventory.map(item => {
+                    const itemData = database.items[item.itemId];
+                    return `${itemData.name} (${item.quantity})`;
+                }).join(", ");
+                document.getElementById("inventoryBrief").textContent = invText;
+            } else {
+                document.getElementById("inventoryBrief").textContent = "Empty";
+            }
+        }
+
+        // Add log entry
+        function addLog(type, message, className = "system") {
+            const gameLog = document.getElementById("gameLog");
+            const entry = document.createElement("div");
+            entry.className = `log-entry ${className}`;
+            
+            const now = new Date().toLocaleTimeString();
+            entry.innerHTML = `<div class="log-timestamp">${type}</div>${message}`;
+            
+            gameLog.appendChild(entry);
+            gameLog.scrollTop = gameLog.scrollHeight;
+        }
+
+        // Execute action
+        async function executeAction(action) {
+            if (!action.trim()) return;
+            
+            action = action.toLowerCase().trim();
+            addLog("You", action, "system");
+            document.getElementById("actionInput").value = "";
+            
+            // Show loading state
+            addLog("AI Game Master", '<span class="loading">Thinking...</span>', "system");
+            
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 500,
+                        system: `You are the Game Master for a text-based Ragnarok Online RPG game. 
+
+GAME STATE:
+- Player Name: ${gameState.playerName}
+- Job: ${gameState.currentJob}
+- Level: ${gameState.level}
+- HP: ${gameState.hp}/${gameState.maxHp}
+- Location: ${gameState.location}
+- In Combat: ${gameState.inCombat}
+
+DATABASE CONTEXT:
+MONSTERS: ${JSON.stringify(database.monsters)}
+ITEMS: ${JSON.stringify(Object.entries(database.items).slice(0, 5))}
+LOCATIONS: ${JSON.stringify(database.locations)}
+SKILLS: ${JSON.stringify(database.skills)}
+
+INSTRUCTIONS:
+1. Process the player's action in the game world
+2. Describe what happens vividly in 2-3 sentences
+3. If attacking a monster, roll damage (1d20 + player attack bonus)
+4. If player wins combat, award EXP and items
+5. Handle HP damage, item usage, job changes, etc.
+6. Return ONLY roleplay text, no system messages unless critical
+7. Keep responses concise and engaging
+8. Reference the database for realistic outcomes
+9. Add difficulty based on player level
+10. Make combat dramatic and exciting
+
+If player uses potion: Restore HP as specified
+If player explores: Describe new encounters or NPCs
+If player checks status: Show detailed stats
+If player takes damage: Reduce HP and describe injury
+If player dies: Game over, player revives at starting location`,
+                        messages: [{
+                            role: "user",
+                            content: `Player action: "${action}". Respond as the Game Master describing what happens. Keep it under 150 words.`
+                        }]
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Remove loading message
+                const gameLog = document.getElementById("gameLog");
+                const loadingEntries = gameLog.querySelectorAll(".loading");
+                if (loadingEntries.length > 0) {
+                    gameLog.removeChild(loadingEntries[loadingEntries.length - 1].closest(".log-entry"));
+                }
+                
+                const gmResponse = data.content[0].text;
+                addLog("Game Master", gmResponse, "npc");
+                
+                // Process game logic based on action
+                processGameLogic(action, gmResponse);
+                
+                updateUI();
+            } catch (error) {
+                console.error("API Error:", error);
+                addLog("Error", "Failed to connect to AI. Check console.", "warning");
+            }
+        }
+
+        // Process game logic based on actions
+        function processGameLogic(action, response) {
+            const lowerAction = action.toLowerCase();
+            
+            // Combat damage simulation
+            if (lowerAction.includes("attack") || lowerAction.includes("fight")) {
+                const damage = Math.floor(Math.random() * 10) + 5;
+                gameState.hp = Math.max(0, gameState.hp - damage);
+                if (gameState.hp === 0) {
+                    addLog("System", "You have been defeated! Respawning at Prontera...", "combat");
+                    gameState.hp = gameState.maxHp;
+                    gameState.location = "Prontera";
+                }
+            }
+            
+            // Healing potions
+            if (lowerAction.includes("use") && lowerAction.includes("potion")) {
+                const potionInv = gameState.inventory.find(item => database.items[item.itemId].category === "Consumable");
+                if (potionInv) {
+                    const potion = database.items[potionInv.itemId];
+                    gameState.hp = Math.min(gameState.maxHp, gameState.hp + potion.effectValue);
+                    potionInv.quantity--;
+                    if (potionInv.quantity === 0) {
+                        gameState.inventory = gameState.inventory.filter(item => item.quantity > 0);
+                    }
+                }
+            }
+            
+            // Gain EXP
+            if (lowerAction.includes("kill") || lowerAction.includes("defeat")) {
+                const expGain = Math.floor(Math.random() * 20) + 10;
+                gameState.exp += expGain;
+                if (gameState.exp >= gameState.expToLevel) {
+                    gameState.level++;
+                    gameState.exp = 0;
+                    gameState.expToLevel = Math.floor(gameState.expToLevel * 1.5);
+                    gameState.maxHp += 10;
+                    gameState.hp = gameState.maxHp;
+                    gameState.maxSp += 5;
+                    gameState.sp = gameState.maxSp;
+                    addLog("System", `Level UP! You are now level ${gameState.level}!`, "success");
+                }
+            }
+            
+            // Add gold
+            if (lowerAction.includes("loot") || lowerAction.includes("find")) {
+                const zenyGain = Math.floor(Math.random() * 500) + 100;
+                gameState.zeny += zenyGain;
+            }
+        }
+
+        // Event listeners
+        document.getElementById("submitBtn").addEventListener("click", () => {
+            const action = document.getElementById("actionInput").value;
+            executeAction(action);
+        });
+
+        document.getElementById("actionInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                const action = document.getElementById("actionInput").value;
+                executeAction(action);
+            }
+        });
+
+        window.executeAction = executeAction;
+
+        // Initialize game on load
+        window.addEventListener("load", initGame);
+    </script>
+</body>
+</html>

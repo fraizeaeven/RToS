@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ragnarok Idle Chronicles</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   VARIABLES & RESET
+═══════════════════════════════════════════════════ */
+:root{
+  --gold:#f5c842; --gold2:#b8860b; --gold3:#ffe066;
+  --glow-gold:rgba(245,200,66,0.4);
+  --red:#e05050; --red2:#8b1a1a; --glow-red:rgba(224,80,80,0.35);
+  --blue:#4a9eff; --blue2:#1a4a8b; --glow-blue:rgba(74,158,255,0.3);
+  --green:#3ecf6e; --green2:#145c2e; --glow-green:rgba(62,207,110,0.3);
+  --purple:#b06cff; --purple2:#4a1a8b;
+  --orange:#ff8c42; --teal:#2ecfcf;
+  --bg0:#04060c; --bg1:#080c18; --bg2:#0c1220; --bg3:#111928;
+  --panel:#0e1525; --panel2:#151e30; --panel3:#1a2540;
+  --border:rgba(245,200,66,0.18); --border2:rgba(245,200,66,0.45);
+  --txt:#8899bb; --txt2:#b8c8e0; --txt3:#e8f0ff;
+  --dim:#2a3550; --dim2:#384560;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg0);color:var(--txt);
+  font-family:'Share Tech Mono',monospace;line-height:1.4;user-select:none;}
+
+/* scanline overlay */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9997;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);}
+
+/* ═══════════════════════════════════════════════════
+   LAYOUT  —  3 col, fixed height
+═══════════════════════════════════════════════════ */
+#app{display:none;width:100%;height:100vh;
+  grid-template-columns:255px 1fr 265px;
+  grid-template-rows:46px 1fr;}
+
+#app.visible{display:grid;}
+
+/* ═══════════════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════════════ */
+#hdr{
+  grid-column:1/-1;
+  background:linear-gradient(90deg,var(--bg2),var(--bg3) 40%,var(--panel3) 60%,var(--bg2));
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;gap:0;
+  box-shadow:0 2px 24px rgba(0,0,0,0.7);
+  position:relative;z-index:20;
+}
+
+.hdr-logo{
+  padding:0 18px;
+  font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;
+  color:var(--gold);letter-spacing:3px;text-shadow:0 0 18px var(--glow-gold);
+  border-right:1px solid var(--border);white-space:nowrap;
+}
+
+.hdr-stats{
+  flex:1;display:flex;gap:0;align-items:stretch;
+  border-right:1px solid var(--border);
+}
+
+.hs{
+  padding:0 14px;display:flex;flex-direction:column;justify-content:center;
+  border-right:1px solid var(--border);font-size:9px;
+  transition:background 0.2s;
+}
+.hs:hover{background:rgba(245,200,66,0.04);}
+.hs .hl{color:var(--dim2);letter-spacing:1px;text-transform:uppercase;margin-bottom:1px;}
+.hs .hv{color:var(--txt3);font-size:12px;}
+.hs .hv.gold{color:var(--gold);}
+.hs .hv.blue{color:var(--blue);}
+.hs .hv.green{color:var(--green);}
+.hs .hv.red{color:var(--red);}
+.hs .hv.purple{color:var(--purple);}
+
+.hdr-right{
+  padding:0 14px;display:flex;align-items:center;gap:10px;
+}
+
+.loc-pill{
+  padding:3px 12px;border:1px solid var(--border2);
+  background:rgba(245,200,66,0.06);
+  color:var(--gold);font-size:9px;letter-spacing:2px;text-transform:uppercase;
+}
+
+.prestige-btn{
+  padding:4px 12px;border:1px solid var(--purple);
+  background:rgba(176,108,255,0.12);
+  color:var(--purple);font-size:9px;letter-spacing:1px;cursor:pointer;
+  transition:all 0.2s;
+}
+.prestige-btn:hover{background:rgba(176,108,255,0.25);box-shadow:0 0 10px var(--purple2);}
+
+/* ═══════════════════════════════════════════════════
+   LEFT PANEL — CHARACTER
+═══════════════════════════════════════════════════ */
+#left{
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+/* portrait */
+.portrait{
+  padding:14px 12px 10px;
+  background:linear-gradient(160deg,var(--bg2),var(--bg3));
+  border-bottom:1px solid var(--border);
+  text-align:center;position:relative;
+}
+
+.portrait::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(245,200,66,0.06),transparent 70%);
+  pointer-events:none;
+}
+
+.p-emoji{font-size:44px;display:block;margin-bottom:4px;
+  filter:drop-shadow(0 0 12px var(--glow-gold));
+  animation:heroFloat 4s ease-in-out infinite;}
+
+@keyframes heroFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+
+.p-name{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--gold3);letter-spacing:1px;}
+.p-class{font-size:9px;color:var(--txt);margin-top:1px;letter-spacing:2px;text-transform:uppercase;}
+.p-prestige{font-size:9px;color:var(--purple);margin-top:2px;}
+
+/* bars */
+.bars{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:7px;}
+
+.brow{display:flex;flex-direction:column;gap:2px;}
+.bhdr{display:flex;justify-content:space-between;font-size:9px;}
+.bl{color:var(--dim2);text-transform:uppercase;letter-spacing:0.5px;}
+.bv{color:var(--txt2);}
+
+.btrack{
+  height:7px;background:rgba(0,0,0,0.6);
+  border:1px solid rgba(255,255,255,0.05);border-radius:1px;overflow:hidden;
+  position:relative;
+}
+.bfill{height:100%;border-radius:1px;transition:width 0.25s ease;}
+.bfill.hp {background:linear-gradient(90deg,var(--red2),var(--red));}
+.bfill.sp {background:linear-gradient(90deg,var(--blue2),var(--blue));}
+.bfill.exp{background:linear-gradient(90deg,var(--green2),var(--green));}
+.bfill.wave{background:linear-gradient(90deg,var(--purple2),var(--purple));}
+
+/* stats */
+.stats-sec{padding:8px 12px;border-bottom:1px solid var(--border);}
+.sec-hdr{font-size:8px;color:var(--gold2);text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.sc{display:flex;justify-content:space-between;padding:2px 5px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.03);font-size:10px;}
+.sn{color:var(--dim2);}
+.sv{color:var(--gold);}
+.sv.hi{color:var(--green);text-shadow:0 0 6px var(--glow-green);}
+
+/* equip */
+.equip-sec{padding:8px 12px;border-bottom:1px solid var(--border);}
+.eslot{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 6px;margin-bottom:2px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(245,200,66,0.1);
+  font-size:10px;cursor:pointer;transition:border-color 0.2s;
+}
+.eslot:hover{border-color:var(--border2);}
+.et{color:var(--dim2);font-size:8px;width:28px;}
+.en{color:var(--txt2);flex:1;padding:0 4px;}
+.ea{color:var(--gold);font-size:9px;}
+
+/* zeny / stats bottom */
+.bottom-stats{
+  margin-top:auto;padding:8px 12px;
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;
+}
+.bstat{text-align:center;padding:5px;background:rgba(0,0,0,0.3);border:1px solid var(--border);}
+.bstat .bsl{font-size:8px;color:var(--dim2);letter-spacing:1px;display:block;margin-bottom:1px;}
+.bstat .bsv{font-size:13px;color:var(--gold);font-family:'Orbitron',sans-serif;}
+
+/* ═══════════════════════════════════════════════════
+   CENTER — ARENA + LOG + INPUT
+═══════════════════════════════════════════════════ */
+#center{
+  display:flex;flex-direction:column;
+  background:var(--bg1);overflow:hidden;
+}
+
+/* ARENA */
+#arena{
+  flex:1;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:crosshair;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 55%,rgba(245,200,66,0.03) 0%,transparent 65%),
+             linear-gradient(180deg,var(--bg1) 0%,var(--bg0) 100%);
+}
+
+/* animated bg grid */
+#arena::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(245,200,66,0.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(245,200,66,0.03) 1px,transparent 1px);
+  background-size:40px 40px;
+  animation:gridScroll 20s linear infinite;
+  pointer-events:none;
+}
+@keyframes gridScroll{from{background-position:0 0;}to{background-position:0 40px;}}
+
+.stage-label{
+  position:absolute;top:10px;left:0;right:0;
+  text-align:center;font-size:9px;color:var(--dim2);letter-spacing:2px;
+  text-transform:uppercase;
+}
+
+/* boss indicator */
+.boss-ring{
+  position:absolute;width:140px;height:140px;
+  border-radius:50%;pointer-events:none;
+  border:2px solid rgba(224,80,80,0.3);
+  animation:bossRing 2s ease-in-out infinite;
+  display:none;
+}
+@keyframes bossRing{0%,100%{transform:scale(1);opacity:0.4;}50%{transform:scale(1.08);opacity:0.8;}}
+
+/* ENEMY */
+.enemy-wrap{
+  text-align:center;position:relative;z-index:2;
+  transition:transform 0.08s;
+}
+.enemy-wrap:active{transform:scale(0.94);}
+
+.e-emoji{
+  font-size:76px;display:block;
+  filter:drop-shadow(0 0 16px rgba(224,80,80,0.5));
+  animation:eFloat 3.5s ease-in-out infinite;
+  transition:filter 0.2s;
+}
+@keyframes eFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-7px);}}
+
+.e-name{font-family:'Orbitron',sans-serif;font-size:15px;color:var(--txt3);
+  letter-spacing:2px;margin-top:6px;text-shadow:0 0 8px rgba(224,80,80,0.3);}
+.e-meta{font-size:9px;color:var(--txt);margin-top:3px;letter-spacing:1px;}
+
+/* enemy HP */
+.e-hp-wrap{width:240px;margin-top:10px;}
+.e-hp-track{
+  height:12px;background:rgba(0,0,0,0.6);
+  border:1px solid rgba(224,80,80,0.5);border-radius:1px;overflow:hidden;position:relative;
+}
+.e-hp-fill{height:100%;background:linear-gradient(90deg,var(--red2),var(--red));transition:width 0.15s;}
+.e-hp-txt{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:8px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.8);letter-spacing:0.5px;
+}
+
+/* tap hint */
+.tap-hint{position:absolute;bottom:12px;font-size:9px;color:var(--dim2);letter-spacing:2px;animation:hint 2s ease-in-out infinite;}
+@keyframes hint{0%,100%{opacity:0.3;}50%{opacity:0.8;}}
+
+/* wave clear banner */
+.wave-banner{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',sans-serif;font-size:20px;color:var(--gold);letter-spacing:4px;
+  text-shadow:0 0 30px var(--glow-gold);
+  opacity:0;pointer-events:none;z-index:50;
+  background:rgba(4,6,12,0.6);
+}
+.wave-banner.show{animation:bannerAnim 1.8s ease forwards;}
+@keyframes bannerAnim{0%{opacity:0;transform:scale(0.6);}25%{opacity:1;transform:scale(1.05);}75%{opacity:1;}100%{opacity:0;transform:scale(1.1);}}
+
+/* DMG FLOATERS */
+.dmg-float{
+  position:fixed;pointer-events:none;z-index:9990;
+  font-family:'Orbitron',sans-serif;font-weight:700;
+  animation:floatUp 0.9s ease forwards;
+}
+@keyframes floatUp{from{opacity:1;transform:translateY(0)scale(1);}to{opacity:0;transform:translateY(-80px)scale(0.6);}}
+.df-click{font-size:22px;color:var(--gold);text-shadow:0 0 10px var(--glow-gold);}
+.df-crit {font-size:28px;color:var(--red) ;text-shadow:0 0 12px var(--glow-red);}
+.df-auto {font-size:13px;color:var(--blue);text-shadow:0 0 6px var(--glow-blue);}
+.df-heal {font-size:14px;color:var(--green);text-shadow:0 0 8px var(--glow-green);}
+.df-exp  {font-size:13px;color:var(--purple);}
+.df-boss {font-size:32px;color:var(--orange);text-shadow:0 0 20px rgba(255,140,66,0.6);}
+
+/* dps ticker */
+.dps-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 12px;background:rgba(0,0,0,0.35);
+  border-top:1px solid var(--border);font-size:9px;
+  flex-wrap:wrap;gap:6px;
+}
+.dps-stat{color:var(--dim2);}
+.dps-stat b{color:var(--blue);}
+.dps-stat.green b{color:var(--green);}
+.dps-stat.gold b{color:var(--gold);}
+.dps-stat.red b{color:var(--red);}
+
+/* BATTLE LOG */
+#log{
+  height:110px;overflow-y:auto;
+  background:rgba(0,0,0,0.45);
+  border-top:1px solid var(--border);
+  padding:4px 10px;display:flex;flex-direction:column;gap:1px;
+}
+.lg{font-size:10px;line-height:1.45;padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.025);}
+.lg .ts{font-size:8px;color:var(--dim2);margin-right:5px;}
+.lg.atk{color:#f88;} .lg.def{color:var(--blue);}
+.lg.ev {color:var(--green);} .lg.loot{color:var(--gold);}
+.lg.sys{color:var(--dim2);} .lg.lvl{color:var(--purple);font-weight:bold;}
+.lg.heal{color:#86efac;} .lg.boss{color:var(--orange);}
+.lg.prestige{color:var(--purple);font-size:11px;}
+
+/* CMD INPUT */
+#cmd-bar{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;background:var(--bg2);
+  border-top:1px solid var(--border);
+}
+#cmd-in{
+  flex:1;height:26px;padding:0 10px;
+  background:rgba(0,0,0,0.5);border:1px solid var(--border);
+  color:var(--txt3);font-family:'Share Tech Mono',monospace;font-size:10px;outline:none;
+}
+#cmd-in:focus{border-color:var(--border2);}
+#cmd-in::placeholder{color:var(--dim2);}
+.cmd-btn{
+  height:26px;padding:0 12px;background:rgba(245,200,66,0.12);
+  border:1px solid var(--border2);color:var(--gold);
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;
+  cursor:pointer;text-transform:uppercase;transition:all 0.2s;
+}
+.cmd-btn:hover{background:rgba(245,200,66,0.22);}
+
+/* ═══════════════════════════════════════════════════
+   RIGHT PANEL — TABS
+═══════════════════════════════════════════════════ */
+#right{
+  background:var(--panel);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);}
+.tab{
+  flex:1;padding:9px 2px;text-align:center;
+  font-size:8px;color:var(--dim2);letter-spacing:0.5px;text-transform:uppercase;
+  cursor:pointer;border-right:1px solid var(--border);transition:all 0.2s;
+}
+.tab:last-child{border-right:none;}
+.tab:hover{color:var(--txt2);background:rgba(245,200,66,0.04);}
+.tab.on{color:var(--gold);background:rgba(245,200,66,0.08);
+  border-bottom:2px solid var(--gold);}
+
+.tab-content{flex:1;overflow-y:auto;padding:8px;}
+
+/* SKILL CARD */
+.sk-card{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 9px;margin-bottom:3px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(176,108,255,0.18);
+  cursor:pointer;transition:all 0.2s;
+}
+.sk-card:hover{border-color:var(--purple);background:rgba(176,108,255,0.1);}
+.sk-card.cd{opacity:0.45;cursor:not-allowed;}
+.sk-card.active-buff{border-color:var(--green);background:rgba(62,207,110,0.08);}
+.sk-l .sk-n{font-size:11px;color:#d8b4fe;}
+.sk-l .sk-d{font-size:8px;color:var(--dim2);margin-top:1px;}
+.sk-r{text-align:right;}
+.sk-r .sk-sp{font-size:9px;color:var(--blue);}
+.sk-r .sk-cd{font-size:8px;color:var(--dim2);}
+
+/* INV ROW */
+.inv-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 8px;margin-bottom:2px;
+  background:rgba(0,0,0,0.28);border:1px solid rgba(245,200,66,0.1);
+  cursor:pointer;font-size:10px;transition:all 0.2s;
+}
+.inv-row:hover{border-color:var(--border2);background:rgba(245,200,66,0.05);}
+.ir-l{display:flex;flex-direction:column;}
+.ir-n{color:var(--txt2);}
+.ir-c{font-size:8px;color:var(--dim2);}
+.ir-r{display:flex;gap:5px;align-items:center;}
+.ir-q{color:var(--gold);font-size:10px;}
+.use-pill{font-size:7px;padding:1px 5px;border:1px solid var(--green);color:var(--green);}
+.sell-pill{font-size:7px;padding:1px 5px;border:1px solid var(--dim2);color:var(--dim2);cursor:pointer;}
+.sell-pill:hover{border-color:var(--gold);color:var(--gold);}
+
+/* MAP ZONE */
+.zone-card{
+  padding:8px;margin-bottom:4px;
+  border:1px solid var(--border);background:rgba(0,0,0,0.28);
+  cursor:pointer;transition:all 0.2s;
+}
+.zone-card:hover{border-color:var(--border2);}
+.zone-card.cur{border-color:var(--green);background:rgba(62,207,110,0.06);}
+.zone-card.lk{opacity:0.35;cursor:not-allowed;filter:grayscale(0.5);}
+.z-hdr{display:flex;justify-content:space-between;align-items:start;margin-bottom:3px;}
+.z-name{font-size:11px;color:var(--txt2);}
+.z-name.cur{color:var(--green);}
+.z-badge{font-size:7px;padding:1px 6px;border:1px solid var(--dim2);color:var(--dim2);}
+.z-badge.cur{border-color:var(--green);color:var(--green);}
+.z-badge.lk{border-color:var(--red2);color:var(--red);}
+.z-desc{font-size:8px;color:var(--dim2);}
+.z-mults{font-size:8px;color:var(--gold2);margin-top:2px;}
+
+/* UPGRADE CARD */
+.upg-card{
+  padding:8px;margin-bottom:4px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(245,200,66,0.12);
+  cursor:pointer;transition:all 0.2s;
+}
+.upg-card:hover{border-color:var(--border2);}
+.upg-card.buyable{border-color:rgba(62,207,110,0.35);}
+.upg-card.maxed{opacity:0.35;cursor:not-allowed;}
+.u-hdr{display:flex;justify-content:space-between;}
+.u-name{font-size:11px;color:var(--txt2);}
+.u-lv{font-size:9px;color:var(--dim2);}
+.u-desc{font-size:8px;color:var(--dim2);margin:2px 0;}
+.u-cost{font-size:11px;color:var(--gold);}
+.u-eff{font-size:8px;color:var(--green);}
+
+/* HERO TAB */
+.hero-card{
+  padding:8px;margin-bottom:4px;
+  background:rgba(0,0,0,0.28);border:1px solid var(--border);
+  transition:all 0.2s;
+}
+.hero-card.unlocked{border-color:rgba(74,158,255,0.3);}
+.hero-card.locked{opacity:0.4;filter:grayscale(0.6);}
+.h-hdr{display:flex;justify-content:space-between;align-items:start;margin-bottom:4px;}
+.h-name{font-size:11px;color:var(--txt2);}
+.h-emoji{font-size:16px;}
+.h-dps{font-size:9px;color:var(--blue);}
+.h-cost{font-size:10px;color:var(--gold);}
+.h-bar-track{height:4px;background:rgba(0,0,0,0.5);border:1px solid var(--border);overflow:hidden;margin-top:3px;}
+.h-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue2),var(--blue));transition:width 0.3s;}
+.hire-btn{
+  width:100%;margin-top:5px;padding:4px;
+  background:rgba(74,158,255,0.12);border:1px solid rgba(74,158,255,0.35);
+  color:var(--blue);font-family:'Share Tech Mono',monospace;font-size:9px;
+  cursor:pointer;letter-spacing:1px;transition:all 0.2s;
+}
+.hire-btn:hover{background:rgba(74,158,255,0.22);}
+.hire-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+/* PRESTIGE PANEL */
+#prestige-modal{
+  position:fixed;inset:0;background:rgba(4,6,12,0.92);
+  display:none;align-items:center;justify-content:center;z-index:9900;
+}
+#prestige-modal.show{display:flex;}
+.pmodal{
+  background:var(--panel3);border:1px solid var(--purple);
+  padding:24px;width:360px;max-width:90vw;text-align:center;
+  box-shadow:0 0 40px rgba(176,108,255,0.3);
+}
+.pmodal h2{font-family:'Orbitron',sans-serif;color:var(--purple);font-size:16px;letter-spacing:3px;margin-bottom:12px;}
+.pmodal p{font-size:11px;color:var(--txt);margin-bottom:8px;}
+.pmodal .pw{color:var(--gold);font-size:14px;}
+.modal-btns{display:flex;gap:8px;margin-top:16px;}
+.modal-btn{flex:1;padding:10px;border:1px solid;font-family:'Share Tech Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;transition:all 0.2s;}
+.modal-btn.confirm{border-color:var(--purple);background:rgba(176,108,255,0.15);color:var(--purple);}
+.modal-btn.confirm:hover{background:rgba(176,108,255,0.3);}
+.modal-btn.cancel{border-color:var(--dim2);background:transparent;color:var(--dim2);}
+.modal-btn.cancel:hover{border-color:var(--txt);color:var(--txt);}
+
+/* TITLE SCREEN */
+#title{
+  position:fixed;inset:0;background:var(--bg0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;z-index:9999;
+}
+
+.title-art{text-align:center;}
+.title-art h1{
+  font-family:'Orbitron',sans-serif;font-size:38px;font-weight:900;
+  color:var(--gold);letter-spacing:6px;
+  text-shadow:0 0 40px var(--glow-gold),0 0 80px rgba(245,200,66,0.1);
+}
+.title-art h2{
+  font-family:'Orbitron',sans-serif;font-size:13px;font-weight:400;
+  color:var(--txt);letter-spacing:6px;margin-top:4px;
+}
+.title-art .sub{font-size:9px;color:var(--dim2);letter-spacing:4px;margin-top:6px;}
+
+.t-form{display:flex;flex-direction:column;gap:12px;width:330px;}
+.t-lbl{font-size:9px;color:var(--dim2);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.t-inp{
+  width:100%;padding:9px 12px;background:rgba(0,0,0,0.6);
+  border:1px solid var(--border2);color:var(--txt3);
+  font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;
+}
+.t-inp:focus{border-color:var(--gold);}
+
+.class-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.c-opt{
+  padding:7px 4px;border:1px solid var(--border);background:rgba(0,0,0,0.4);
+  cursor:pointer;text-align:center;transition:all 0.2s;
+}
+.c-opt:hover,.c-opt.on{border-color:var(--gold);background:rgba(245,200,66,0.08);}
+.c-opt .ce{font-size:20px;display:block;margin-bottom:3px;}
+.c-opt .cn{font-size:9px;color:var(--txt2);}
+.c-opt .cd{font-size:7px;color:var(--dim2);margin-top:1px;}
+
+.t-start{
+  width:100%;padding:13px;
+  background:linear-gradient(90deg,rgba(245,200,66,0.1),rgba(245,200,66,0.25));
+  border:1px solid var(--gold);color:var(--gold);
+  font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;
+  cursor:pointer;letter-spacing:4px;text-transform:uppercase;
+  transition:all 0.3s;
+}
+.t-start:hover{background:rgba(245,200,66,0.3);box-shadow:0 0 28px var(--glow-gold);}
+
+.t-deco{font-size:9px;color:var(--dim2);text-align:center;
+  border:1px solid var(--border);padding:7px 18px;}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:52px;left:50%;transform:translateX(-50%);
+  background:rgba(10,15,28,0.96);border:1px solid var(--border2);
+  padding:7px 18px;font-size:10px;color:var(--gold);letter-spacing:1px;
+  opacity:0;pointer-events:none;z-index:9998;transition:opacity 0.25s;
+  text-align:center;
+}
+
+/* scrollbar */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.3);}
+::-webkit-scrollbar-thumb{background:rgba(245,200,66,0.3);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ TITLE ═══════════════ -->
+<div id="title">
+  <div class="title-art">
+    <h1>RAGNAROK</h1>
+    <h2>IDLE CHRONICLES</h2>
+    <div class="sub">AUTO-BATTLE · IDLE CLICKER · TEXT RPG</div>
+  </div>
+
+  <div class="t-form">
+    <div>
+      <div class="t-lbl">Character Name</div>
+      <input class="t-inp" id="iName" placeholder="Enter name..." maxlength="20">
+    </div>
+    <div>
+      <div class="t-lbl">Job Class</div>
+      <div class="class-grid" id="classGrid">
+        <div class="c-opt on" data-job="Swordsman"><span class="ce">⚔️</span><span class="cn">Swordsman</span><span class="cd">STR·VIT·Tank</span></div>
+        <div class="c-opt" data-job="Mage">        <span class="ce">🔮</span><span class="cn">Mage</span>       <span class="cd">INT·Burst</span></div>
+        <div class="c-opt" data-job="Archer">      <span class="ce">🏹</span><span class="cn">Archer</span>    <span class="cd">AGI·Ranged</span></div>
+        <div class="c-opt" data-job="Acolyte">     <span class="ce">✨</span><span class="cn">Acolyte</span>   <span class="cd">WIS·Heal</span></div>
+        <div class="c-opt" data-job="Thief">       <span class="ce">🗡️</span><span class="cn">Thief</span>     <span class="cd">AGI·Crit</span></div>
+        <div class="c-opt" data-job="Novice">      <span class="ce">🧍</span><span class="cn">Novice</span>    <span class="cd">Balanced</span></div>
+      </div>
+    </div>
+    <button class="t-start" onclick="startGame()">▶ BEGIN ADVENTURE</button>
+  </div>
+  <div class="t-deco">Auto-battle · Click to burst · Hire heroes · Prestige system</div>
+</div>
+
+<!-- ═══════════════ GAME ═══════════════ -->
+<div id="app">
+  <!-- HEADER -->
+  <div id="hdr">
+    <div class="hdr-logo">RAGNAROK <span style="color:var(--txt);font-weight:400;font-size:10px">IDLE</span></div>
+    <div class="hdr-stats">
+      <div class="hs"><div class="hl">Level</div><div class="hv gold" id="h-lv">1</div></div>
+      <div class="hs"><div class="hl">HP</div><div class="hv red" id="h-hp">100</div></div>
+      <div class="hs"><div class="hl">Click DMG</div><div class="hv gold" id="h-clk">0</div></div>
+      <div class="hs"><div class="hl">Auto DPS</div><div class="hv blue" id="h-dps">0</div></div>
+      <div class="hs"><div class="hl">Hero DPS</div><div class="hv purple" id="h-hdps">0</div></div>
+      <div class="hs"><div class="hl">EXP/s</div><div class="hv green" id="h-eps">0</div></div>
+      <div class="hs"><div class="hl">Kills</div><div class="hv" id="h-kills">0</div></div>
+      <div class="hs"><div class="hl">Wave</div><div class="hv" id="h-wave">1</div></div>
+    </div>
+    <div class="hdr-right">
+      <div class="loc-pill" id="h-loc">PRONTERA FIELD</div>
+      <div class="prestige-btn" onclick="openPrestige()">★ PRESTIGE</div>
+    </div>
+  </div>
+
+  <!-- LEFT -->
+  <div id="left">
+    <div class="portrait">
+      <span class="p-emoji" id="p-emoji">⚔️</span>
+      <div class="p-name" id="p-name">—</div>
+      <div class="p-class" id="p-class">—</div>
+      <div class="p-prestige" id="p-prestige"></div>
+    </div>
+
+    <div class="bars">
+      <div class="brow">
+        <div class="bhdr"><span class="bl">HP</span><span class="bv"><span id="b-hpv">100</span>/<span id="b-hpm">100</span></span></div>
+        <div class="btrack"><div class="bfill hp" id="b-hp" style="width:100%"></div></div>
+      </div>
+      <div class="brow">
+        <div class="bhdr"><span class="bl">SP</span><span class="bv"><span id="b-spv">50</span>/<span id="b-spm">50</span></span></div>
+        <div class="btrack"><div class="bfill sp" id="b-sp" style="width:100%"></div></div>
+      </div>
+      <div class="brow">
+        <div class="bhdr"><span class="bl">EXP</span><span class="bv"><span id="b-expv">0</span>/<span id="b-expm">100</span></span></div>
+        <div class="btrack"><div class="bfill exp" id="b-exp" style="width:0%"></div></div>
+      </div>
+      <div class="brow">
+        <div class="bhdr"><span class="bl">Wave</span><span class="bv"><span id="b-wkills">0</span>/<span id="b-wgoal">5</span></span></div>
+        <div class="btrack"><div class="bfill wave" id="b-wave" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="stats-sec">
+      <div class="sec-hdr">Stats</div>
+      <div class="sg" id="stats-grid"></div>
+    </div>
+
+    <div class="equip-sec">
+      <div class="sec-hdr">Equipment</div>
+      <div class="eslot"><span class="et">WPN</span><span class="en" id="eq-wpn">Unarmed</span><span class="ea" id="eq-wpna"></span></div>
+      <div class="eslot"><span class="et">ARM</span><span class="en" id="eq-arm">None</span>   <span class="ea" id="eq-arma"></span></div>
+      <div class="eslot"><span class="et">ACC</span><span class="en" id="eq-acc">—</span>       <span class="ea"></span></div>
+    </div>
+
+    <div class="bottom-stats">
+      <div class="bstat"><span class="bsl">ZENY</span><span class="bsv" id="bs-zeny">0</span></div>
+      <div class="bstat"><span class="bsl">CRIT%</span><span class="bsv" id="bs-crit">5%</span></div>
+      <div class="bstat"><span class="bsl">DEF</span><span class="bsv" id="bs-def">0</span></div>
+      <div class="bstat"><span class="bsl">P-STAR</span><span class="bsv" id="bs-star" style="color:var(--purple)">0</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <div id="arena" onclick="clickAtk(event)">
+      <div class="stage-label" id="stage-lbl">PRONTERA FIELD — WAVE 1</div>
+      <div class="boss-ring" id="boss-ring"></div>
+      <div class="enemy-wrap" id="enemy-wrap">
+        <span class="e-emoji" id="e-emoji">🟣</span>
+        <div class="e-name" id="e-name">Poring</div>
+        <div class="e-meta" id="e-meta">Lv.1 · Water</div>
+        <div class="e-hp-wrap">
+          <div class="e-hp-track">
+            <div class="e-hp-fill" id="e-hp-fill" style="width:100%"></div>
+            <div class="e-hp-txt" id="e-hp-txt">10/10</div>
+          </div>
+        </div>
+      </div>
+      <div class="wave-banner" id="wave-banner">WAVE CLEAR!</div>
+      <div class="tap-hint">[ TAP TO STRIKE ]</div>
+    </div>
+
+    <div class="dps-bar">
+      <span class="dps-stat">AUTO DPS <b id="d-dps">0</b>/s</span>
+      <span class="dps-stat green">HP REGEN <b id="d-regen">+1</b>/s</span>
+      <span class="dps-stat gold">SP REGEN <b>+2</b>/s</span>
+      <span class="dps-stat red">ENEMY ATK <b id="d-eatk">0</b>/s</span>
+      <span class="dps-stat" style="color:var(--purple)">HEROES <b id="d-heroes">0</b> DPS</span>
+    </div>
+
+    <div id="log"></div>
+
+    <div id="cmd-bar">
+      <input id="cmd-in" placeholder="Command: use potion · go payon · sell · buy sword · skill bash · status..." autocomplete="off">
+      <button class="cmd-btn" onclick="sendCmd()">EXEC</button>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div id="right">
+    <div class="tabs">
+      <div class="tab on"  onclick="showTab('sk')">Skills</div>
+      <div class="tab"     onclick="showTab('inv')">Items</div>
+      <div class="tab"     onclick="showTab('map')">Map</div>
+      <div class="tab"     onclick="showTab('upg')">Upgrades</div>
+      <div class="tab"     onclick="showTab('heroes')">Heroes</div>
+    </div>
+    <div class="tab-content" id="tab-body"></div>
+  </div>
+</div>
+
+<!-- PRESTIGE MODAL -->
+<div id="prestige-modal">
+  <div class="pmodal">
+    <h2>★ PRESTIGE ★</h2>
+    <p>Reset your progress to earn a <b style="color:var(--purple)">Prestige Star</b>.<br>Each star gives permanent bonuses.</p>
+    <p>You will receive:</p>
+    <div class="pw" id="prestige-reward">1 Prestige Star</div>
+    <p style="margin-top:8px;font-size:10px;color:var(--dim2)">Bonus per star: +10% all damage, +5% EXP, +5% Zeny</p>
+    <p style="font-size:10px;color:var(--red);margin-top:4px;">Requires: Level 25+</p>
+    <div class="modal-btns">
+      <button class="modal-btn confirm" onclick="doPrestige()">CONFIRM</button>
+      <button class="modal-btn cancel"  onclick="closePrestige()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATABASE
+// ═══════════════════════════════════════════════════
+const DB = {
+  jobs:{
+    Swordsman:{e:"⚔️", hp:120,sp:35, stats:{str:5,agi:2,vit:4,int:1,wis:2,lck:1}, skills:["Bash","Provoke"],      wpn:"101",arm:"201", desc:"Frontline warrior"},
+    Mage:     {e:"🔮", hp:60, sp:100,stats:{str:1,agi:1,vit:1,int:6,wis:4,lck:1}, skills:["Fire Bolt","Cold Bolt"],wpn:"120",arm:"200", desc:"Spell burst caster"},
+    Archer:   {e:"🏹", hp:80, sp:55, stats:{str:2,agi:6,vit:1,int:1,wis:2,lck:3}, skills:["Arrow Shower","Snipe"],wpn:"130",arm:"200", desc:"Swift ranged fighter"},
+    Acolyte:  {e:"✨", hp:85, sp:90, stats:{str:1,agi:2,vit:3,int:2,wis:6,lck:1}, skills:["Heal","Blessing"],     wpn:"120",arm:"200", desc:"Holy healer"},
+    Thief:    {e:"🗡️", hp:85, sp:50, stats:{str:2,agi:6,vit:1,int:1,wis:1,lck:5}, skills:["Backstab","Steal"],    wpn:"110",arm:"200", desc:"Shadow striker"},
+    Novice:   {e:"🧍", hp:80, sp:40, stats:{str:2,agi:2,vit:2,int:2,wis:2,lck:2}, skills:["Slash"],               wpn:"100",arm:"200", desc:"Balanced start"},
+  },
+  items:{
+    "100":{n:"Short Sword",   cat:"Weapon",  atk:24,        buy:500,  sell:150},
+    "101":{n:"Broadsword",    cat:"Weapon",  atk:48,        buy:2000, sell:600},
+    "102":{n:"Claymore",      cat:"Weapon",  atk:95,        buy:5000, sell:1500},
+    "103":{n:"Dragon Sword",  cat:"Weapon",  atk:160,       buy:15000,sell:4000},
+    "110":{n:"Dagger",        cat:"Weapon",  atk:15,        buy:300,  sell:90},
+    "111":{n:"Main Gauche",   cat:"Weapon",  atk:38, crit:0.05, buy:2500,sell:750},
+    "120":{n:"Staff",         cat:"Weapon",  atk:8,  matk:22,   buy:600, sell:180},
+    "121":{n:"Arc Wand",      cat:"Weapon",  atk:10, matk:55,   buy:3000,sell:900},
+    "130":{n:"Short Bow",     cat:"Weapon",  atk:20,        buy:700,  sell:210},
+    "131":{n:"Hunter Bow",    cat:"Weapon",  atk:55, agi:2,     buy:3500,sell:1050},
+    "200":{n:"Coat",          cat:"Armor",   def:6,         buy:400,  sell:120},
+    "201":{n:"Leather Armor", cat:"Armor",   def:12,        buy:1200, sell:360},
+    "202":{n:"Plate Armor",   cat:"Armor",   def:22,        buy:3500, sell:1050},
+    "203":{n:"Valkyrie Armor",cat:"Armor",   def:40,hp:30,  buy:12000,sell:3500},
+    "300":{n:"Ring",          cat:"Acc",     str:1,         buy:800,  sell:240},
+    "301":{n:"Glove",         cat:"Acc",     agi:2,         buy:1000, sell:300},
+    "302":{n:"Mithril Glove", cat:"Acc",     agi:3,int:2,   buy:3000, sell:900},
+    "400":{n:"Red Potion",    cat:"Consumable", effect:"healHP",  val:45,  buy:50,  sell:15},
+    "401":{n:"Yellow Potion", cat:"Consumable", effect:"healHP",  val:150, buy:100, sell:30},
+    "402":{n:"Blue Potion",   cat:"Consumable", effect:"healSP",  val:40,  buy:100, sell:30},
+    "403":{n:"White Potion",  cat:"Consumable", effect:"healBoth",val:200,val2:100,buy:1500,sell:450},
+    "404":{n:"Awakening Pot", cat:"Consumable", effect:"haste",   val:30,  buy:2000,sell:600},
+    "001":{n:"Phracon",       cat:"Material",buy:2500,sell:750},
+    "002":{n:"Elunium",       cat:"Material",buy:8000,sell:2400},
+    "003":{n:"Oridecon",      cat:"Material",buy:8000,sell:2400},
+    "004":{n:"Yggdrasil Leaf",cat:"Material",buy:5000,sell:1500},
+    "005":{n:"Iron Ore",      cat:"Material",buy:1000,sell:300},
+  },
+  monsters:[
+    // zone 0: Prontera Field  lv 1-9
+    {z:0,id:"m01",n:"Poring",     e:"🟣",lv:1, hp:10,  atk:2,  exp:3,  jexp:4,  zeny:[50,120],   el:"Water",  drops:[["001",70],["400",20]]},
+    {z:0,id:"m02",n:"Lunatic",    e:"🐰",lv:2, hp:15,  atk:4,  exp:5,  jexp:7,  zeny:[70,180],   el:"Wind",   drops:[["001",60]]},
+    {z:0,id:"m03",n:"Chonchon",   e:"🐝",lv:3, hp:20,  atk:6,  exp:8,  jexp:10, zeny:[100,240],  el:"Wind",   drops:[["005",55]]},
+    {z:0,id:"m04",n:"Rocker",     e:"🪨",lv:5, hp:35,  atk:10, exp:14, jexp:18, zeny:[200,480],  el:"Earth",  drops:[["002",30],["005",40]]},
+    {z:0,id:"m05",n:"Fabre",      e:"🦗",lv:4, hp:28,  atk:8,  exp:11, jexp:14, zeny:[150,360],  el:"Earth",  drops:[["005",60]]},
+    // zone 0 boss
+    {z:0,id:"mb1",n:"BOSS: Poring King",e:"👑",lv:8,hp:400,atk:25,exp:120,jexp:150,zeny:[1500,3000],el:"Water",boss:true,drops:[["401",90],["001",80],["300",30]]},
+    // zone 1: Payon Forest  lv 6-14
+    {z:1,id:"m11",n:"Creamy",     e:"🦋",lv:6, hp:40,  atk:12, exp:18, jexp:22, zeny:[250,580],  el:"Fire",   drops:[["002",40]]},
+    {z:1,id:"m12",n:"Thief Bug",  e:"🐛",lv:7, hp:50,  atk:15, exp:24, jexp:30, zeny:[300,700],  el:"Earth",  drops:[["001",45]]},
+    {z:1,id:"m13",n:"Wolf",       e:"🐺",lv:9, hp:65,  atk:18, exp:32, jexp:40, zeny:[400,900],  el:"Neutral",drops:[["005",55]]},
+    {z:1,id:"m14",n:"Orc Warrior",e:"🗡",lv:12,hp:90,  atk:25, exp:50, jexp:65, zeny:[600,1400], el:"Earth",  drops:[["002",45],["201",5]]},
+    {z:1,id:"mb2",n:"BOSS: Orc Lord",e:"👹",lv:14,hp:800,atk:45,exp:400,jexp:500,zeny:[5000,10000],el:"Earth",boss:true,drops:[["402",80],["201",40],["301",25]]},
+    // zone 2: Geffen Field  lv 10-19
+    {z:2,id:"m21",n:"Poison Spore",e:"🍄",lv:10,hp:75,  atk:22, exp:40, jexp:50, zeny:[500,1100], el:"Poison", drops:[["002",45]]},
+    {z:2,id:"m22",n:"Hornet",     e:"🐞",lv:12,hp:85,  atk:26, exp:52, jexp:65, zeny:[620,1400], el:"Wind",   drops:[["005",60]]},
+    {z:2,id:"m23",n:"Geographer", e:"🌿",lv:15,hp:120, atk:32, exp:75, jexp:95, zeny:[900,2000], el:"Earth",  drops:[["003",35]]},
+    {z:2,id:"mb3",n:"BOSS: Dark Lord",e:"🧙",lv:18,hp:1500,atk:70,exp:800,jexp:1000,zeny:[12000,25000],el:"Dark",boss:true,drops:[["403",80],["121",20],["302",20]]},
+    // zone 3: Geffen Dungeon  lv 15-24
+    {z:3,id:"m31",n:"Archer Skeleton",e:"💀",lv:15,hp:100,atk:32,exp:75, jexp:95, zeny:[900,2000], el:"Undead", drops:[["003",50],["402",20]]},
+    {z:3,id:"m32",n:"Zombie",     e:"🧟",lv:17,hp:120, atk:38, exp:95, jexp:120,zeny:[1100,2500], el:"Undead", drops:[["001",65]]},
+    {z:3,id:"m33",n:"Mummy",      e:"⚱️", lv:20,hp:160, atk:46, exp:130,jexp:165,zeny:[1600,3600], el:"Undead", drops:[["003",60],["403",12]]},
+    {z:3,id:"mb4",n:"BOSS: Lich King",e:"💎",lv:24,hp:3000,atk:110,exp:2000,jexp:2500,zeny:[30000,60000],el:"Undead",boss:true,drops:[["403",90],["202",35],["003",80]]},
+    // zone 4: Sphinx  lv 20+
+    {z:4,id:"m41",n:"Anubis",     e:"🐾",lv:22,hp:200, atk:55, exp:175,jexp:220,zeny:[2200,5000], el:"Dark",   drops:[["003",65],["004",10]]},
+    {z:4,id:"m42",n:"Marduk",     e:"🏛️", lv:25,hp:260, atk:68, exp:220,jexp:280,zeny:[2800,6500], el:"Holy",   drops:[["004",20],["202",8]]},
+    {z:4,id:"mb5",n:"BOSS: Pharaoh",e:"👁️", lv:30,hp:6000,atk:160,exp:5000,jexp:6000,zeny:[80000,150000],el:"Dark",boss:true,drops:[["403",100],["203",25],["103",10]]},
+  ],
+  zones:[
+    {id:0,n:"Prontera Field",  desc:"Beginner fields",    lvReq:1,  expM:1.0, zenyM:1.0, waveMax:10},
+    {id:1,n:"Payon Forest",    desc:"Dark forest paths",  lvReq:6,  expM:1.5, zenyM:1.3, waveMax:10},
+    {id:2,n:"Geffen Field",    desc:"Misty magical plains",lvReq:11,expM:2.0, zenyM:1.7, waveMax:10},
+    {id:3,n:"Geffen Dungeon",  desc:"Undead caverns",     lvReq:16, expM:2.8, zenyM:2.3, waveMax:10},
+    {id:4,n:"Sphinx Dungeon",  desc:"Ancient sanctum",    lvReq:21, expM:4.0, zenyM:3.2, waveMax:10},
+  ],
+  skills:{
+    "Slash":       {sp:0,  cd:0,  dmg:1.0, type:"phys",   col:"#b8c8e0", desc:"Basic strike"},
+    "Bash":        {sp:4,  cd:3,  dmg:1.9, type:"phys",   col:"#fca5a5", desc:"Heavy blow, chance to stun"},
+    "Provoke":     {sp:2,  cd:10, dmg:0,   type:"debuff", col:"#f5c842", desc:"Reduces enemy ATK 25% for 5s"},
+    "Fire Bolt":   {sp:12, cd:4,  dmg:2.3, type:"magic",  col:"#f97316", desc:"Fire damage burst"},
+    "Cold Bolt":   {sp:12, cd:4,  dmg:2.1, type:"magic",  col:"#93c5fd", desc:"Ice bolt, slows foe"},
+    "Arrow Shower":{sp:15, cd:5,  dmg:1.7, type:"phys",   col:"#a3e635", desc:"Multi-hit rain of arrows"},
+    "Snipe":       {sp:10, cd:7,  dmg:2.6, type:"phys",   col:"#facc15", desc:"Armor-piercing shot"},
+    "Heal":        {sp:14, cd:3,  dmg:0,   type:"heal",   col:"#86efac", heal:85, desc:"Restore HP"},
+    "Blessing":    {sp:20, cd:35, dmg:0,   type:"buff",   col:"#d8b4fe", dur:35,  desc:"+25% stats for 35s"},
+    "Backstab":    {sp:8,  cd:5,  dmg:2.9, type:"phys",   col:"#e879f9", desc:"Shadow strike, ignores DEF"},
+    "Steal":       {sp:5,  cd:8,  dmg:0,   type:"special",col:"#f5c842", desc:"Steal item from enemy"},
+  },
+  heroes:[
+    {id:"h1",n:"Apprentice Knight",e:"🛡️", baseDps:2,  lvCost:30,  upCost:50,   lvMax:50,  desc:"Basic melee helper"},
+    {id:"h2",n:"Wandering Mage",   e:"📖", baseDps:6,  lvCost:200, upCost:300,  lvMax:50,  desc:"Spell support"},
+    {id:"h3",n:"Rogue Scout",      e:"🔍", baseDps:15, lvCost:600, upCost:800,  lvMax:50,  desc:"Fast critical striker"},
+    {id:"h4",n:"Holy Acolyte",     e:"💫", baseDps:40, lvCost:2000,upCost:2500, lvMax:50,  desc:"Heals & attacks"},
+    {id:"h5",n:"Dragon Knight",    e:"🐉", baseDps:120,lvCost:8000,upCost:10000,lvMax:50,  desc:"Legendary warrior"},
+    {id:"h6",n:"Valkyrie",         e:"⚡", baseDps:400,lvCost:30000,upCost:35000,lvMax:50, desc:"Divine champion"},
+  ],
+  upgrades:[
+    {id:"u_atk1", n:"Sharpen Edge",      desc:"+8 base ATK",         cost:400,   maxLv:15, eff:"atk",   val:8},
+    {id:"u_hp1",  n:"Iron Constitution", desc:"+25 max HP",           cost:300,   maxLv:15, eff:"hp",    val:25},
+    {id:"u_sp1",  n:"Mana Crystal",      desc:"+20 max SP",           cost:280,   maxLv:10, eff:"sp",    val:20},
+    {id:"u_crit1",n:"Eagle Eye",         desc:"+4% crit chance",      cost:700,   maxLv:10, eff:"crit",  val:0.04},
+    {id:"u_crit2",n:"Fatal Strike",      desc:"Crit dmg ×0.3",        cost:1200,  maxLv:5,  eff:"critdmg",val:0.3},
+    {id:"u_regen",n:"Natural Recovery",  desc:"+1 HP regen/s",        cost:900,   maxLv:8,  eff:"regen", val:1},
+    {id:"u_dps",  n:"Battle Rhythm",     desc:"+15% auto DPS",        cost:1200,  maxLv:10, eff:"dps",   val:0.15},
+    {id:"u_hdps", n:"Hero Training",     desc:"+20% hero DPS",        cost:1500,  maxLv:10, eff:"hdps",  val:0.20},
+    {id:"u_exp",  n:"Scholar's Tome",    desc:"+15% EXP gain",        cost:800,   maxLv:8,  eff:"exp",   val:0.15},
+    {id:"u_zeny", n:"Merchant's Eye",    desc:"+15% Zeny drops",      cost:850,   maxLv:8,  eff:"zeny",  val:0.15},
+    {id:"u_click",n:"Power Strike",      desc:"+20% click damage",    cost:600,   maxLv:10, eff:"click", val:0.20},
+    {id:"u_def",  n:"Hardened Shield",   desc:"+4 defense",           cost:500,   maxLv:10, eff:"def",   val:4},
+  ],
+};
+
+// ═══════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════
+let G;
+let SKcds  = {};
+let buffTimer = 0;
+let provokeTimer = 0;
+let hasteTimer = 0;
+let activeTab = "sk";
+let autoTick, regenTick, saveTick;
+let toastTmr;
+
+function startGame(){
+  const name = document.getElementById("iName").value.trim() || "Adventurer";
+  const job  = document.querySelector(".c-opt.on")?.dataset.job || "Swordsman";
+  const jd   = DB.jobs[job];
+
+  G = {
+    name, job,
+    lv:1, exp:0, expMax:100,
+    hp:jd.hp, maxHp:jd.hp,
+    sp:jd.sp, maxSp:jd.sp,
+    stats:{...jd.stats},
+    zeny:0, prestige:0, prestigeStars:0,
+    zone:0,
+    wave:1, waveKills:0, waveGoal:5,
+    enemy:null, eHp:0, eMaxHp:0,
+    inv:[{id:"400",q:5},{id:"402",q:3}],
+    equip:{wpn:jd.wpn, arm:jd.arm, acc:null},
+    skills:[...jd.skills],
+    upgrades:{},
+    heroes:{},
+    kills:0, totalKills:0,
+    bonuses:{crit:0,critDmg:1.8,regen:1,dpsB:0,hdpsB:0,expB:0,zenyB:0,clickB:0,def:0},
+  };
+
+  document.getElementById("title").style.display = "none";
+  document.getElementById("app").classList.add("visible");
+
+  spawnEnemy();
+  showTab("sk");
+  renderAll();
+  log("sys","Welcome, "+G.name+" the "+G.job+"! Auto-battle is active. Click to deal burst damage.");
+  log("sys","Use quick actions or type commands below. EXP ticks automatically every second in field zones.");
+
+  autoTick  = setInterval(gameTick, 1000);
+  regenTick = setInterval(()=>{
+    if(G.hp < G.maxHp) G.hp = Math.min(G.maxHp, G.hp + G.bonuses.regen);
+    if(G.sp < G.maxSp) G.sp = Math.min(G.maxSp, G.sp + 2);
+    if(buffTimer>0)    buffTimer--;
+    if(provokeTimer>0) provokeTimer--;
+    if(hasteTimer>0)   hasteTimer--;
+    // tick skill cooldowns
+    for(const sk in SKcds){ if(SKcds[sk]>0){ SKcds[sk]--; } }
+    renderBars(); updateSkillsTab();
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════
+// MAIN TICK (every 1s)
+// ═══════════════════════════════════════════════════
+function gameTick(){
+  if(!G.enemy) return;
+  const zone = DB.zones[G.zone];
+  const em   = getCurEnemy();
+  if(!em) return;
+
+  // Player auto-attack
+  const autoDmg = Math.max(1, Math.floor(calcAtk() * (0.65 + G.bonuses.dpsB)));
+  dealDmg(autoDmg, "auto");
+
+  // Hero DPS
+  const heroDps = calcHeroDps();
+  if(heroDps > 0 && G.eHp > 0) dealDmg(Math.max(1,Math.floor(heroDps)), "hero");
+
+  // Enemy attacks player (if still alive)
+  if(G.enemy && G.eHp > 0){
+    const provokeMult = provokeTimer > 0 ? 0.75 : 1;
+    const rawEAtk = Math.floor(em.atk * provokeMult * (0.8 + Math.random()*0.4));
+    const def = calcDef();
+    const eDmg = Math.max(1, rawEAtk - Math.floor(def * 0.4));
+    G.hp = Math.max(0, G.hp - eDmg);
+    if(G.hp <= 0) onPlayerDied();
+  }
+
+  // EXP passive tick while in field
+  const expTick = Math.floor(em.exp * zone.expM * 0.08 * (1 + G.bonuses.expB));
+  gainExp(expTick);
+
+  // Update header DPS display
+  document.getElementById("h-dps").textContent  = fmtNum(Math.floor(calcAtk()*(0.65+G.bonuses.dpsB)));
+  document.getElementById("h-hdps").textContent = fmtNum(Math.floor(calcHeroDps()));
+  document.getElementById("h-eps").textContent  = fmtNum(expTick);
+  document.getElementById("d-dps").textContent  = fmtNum(Math.floor(calcAtk()*(0.65+G.bonuses.dpsB)) + Math.floor(calcHeroDps()));
+  document.getElementById("d-heroes").textContent = fmtNum(Math.floor(calcHeroDps()));
+  document.getElementById("d-eatk").textContent = em ? fmtNum(em.atk) : "0";
+
+  renderBars(); renderLeft();
+}
+
+// ═══════════════════════════════════════════════════
+// CLICK ATTACK
+// ═══════════════════════════════════════════════════
+function clickAtk(e){
+  if(!G.enemy) return;
+  const crit = Math.random() < (0.05 + G.bonuses.crit);
+  const base = calcClickDmg();
+  const dmg  = crit ? Math.floor(base * G.bonuses.critDmg) : base;
+  spawnFloat(e.clientX, e.clientY, (crit?"💥":"") + fmtNum(dmg), crit?"df-crit":"df-click");
+  dealDmg(dmg, "click", crit);
+}
+
+// ═══════════════════════════════════════════════════
+// DAMAGE SYSTEM
+// ═══════════════════════════════════════════════════
+function dealDmg(dmg, src, crit){
+  if(!G.enemy || G.eHp <= 0) return;
+  G.eHp -= dmg;
+  if(src==="click" && crit) log("atk","💥 CRITICAL! "+fmtNum(dmg)+" dmg → "+getCurEnemy()?.n);
+  updateEnemyBar();
+  if(G.eHp <= 0) killEnemy();
+}
+
+function killEnemy(){
+  const em   = getCurEnemy();
+  const zone = DB.zones[G.zone];
+  G.kills++; G.totalKills++; G.waveKills++;
+
+  const expGain  = Math.floor(em.exp * zone.expM * (1 + G.bonuses.expB));
+  const rawZeny  = em.zeny[0] + Math.random()*(em.zeny[1]-em.zeny[0]);
+  const zenyGain = Math.floor(rawZeny * zone.zenyM * (1 + G.bonuses.zenyB));
+
+  gainExp(expGain);
+  G.zeny += zenyGain;
+
+  if(em.boss) log("boss","👑 BOSS SLAIN: "+em.n+"! +"+fmtNum(expGain)+" EXP, +"+fmtNum(zenyGain)+" z");
+  else        log("ev","⚔ "+em.n+" defeated  +"+expGain+" exp  +"+zenyGain+"z");
+
+  // Drops
+  for(const [did,rate] of em.drops){
+    if(Math.random()*100 < rate){
+      addInv(did,1);
+      log("loot","💎 Drop: "+DB.items[did]?.n);
+    }
+  }
+
+  // Wave
+  renderWaveBar();
+  if(G.waveKills >= G.waveGoal) advanceWave();
+  else setTimeout(spawnEnemy, 500);
+
+  renderLeft();
+}
+
+function onPlayerDied(){
+  log("sys","💀 Defeated! Respawning with partial HP…");
+  G.hp = Math.floor(G.maxHp * 0.35);
+  G.exp = Math.max(0, G.exp - 15);
+  setTimeout(spawnEnemy, 1200);
+}
+
+// ═══════════════════════════════════════════════════
+// ENEMY SPAWNING
+// ═══════════════════════════════════════════════════
+function spawnEnemy(){
+  const zone = DB.zones[G.zone];
+  const pool = DB.monsters.filter(m => m.z === G.zone && !m.boss);
+  const isBossWave = G.wave % zone.waveMax === 0;
+  let em;
+  if(isBossWave){
+    em = DB.monsters.find(m => m.z === G.zone && m.boss);
+    if(!em) em = pool[Math.floor(Math.random()*pool.length)];
+  } else {
+    em = pool[Math.floor(Math.random()*pool.length)];
+  }
+  if(!em) return;
+
+  G.enemy   = em.id;
+  const lvScale = 1 + G.lv * 0.12;
+  G.eMaxHp = Math.floor(em.hp * lvScale);
+  G.eHp    = G.eMaxHp;
+
+  document.getElementById("e-emoji").textContent = em.e;
+  document.getElementById("e-name").textContent  = em.n;
+  document.getElementById("e-meta").textContent  = "Lv."+em.lv+" · "+em.el + (em.boss ? " · ★ BOSS ★" : "");
+  document.getElementById("boss-ring").style.display = em.boss ? "block" : "none";
+  updateEnemyBar();
+}
+
+function advanceWave(){
+  G.wave++; G.waveKills=0; G.waveGoal = 5 + Math.floor(G.wave*0.5);
+  const banner = document.getElementById("wave-banner");
+  banner.textContent = "WAVE "+(G.wave-1)+" CLEAR!";
+  banner.classList.add("show");
+  setTimeout(()=>banner.classList.remove("show"), 1900);
+  document.getElementById("stage-lbl").textContent = DB.zones[G.zone].n.toUpperCase()+" — WAVE "+G.wave;
+  setTimeout(spawnEnemy, 1100);
+}
+
+function getCurEnemy(){ return DB.monsters.find(m=>m.id===G.enemy); }
+
+// ═══════════════════════════════════════════════════
+// EXP / LEVEL
+// ═══════════════════════════════════════════════════
+function gainExp(amt){
+  if(amt<=0) return;
+  G.exp += amt;
+  while(G.exp >= G.expMax){
+    G.exp -= G.expMax;
+    G.lv++;
+    G.expMax = Math.floor(G.expMax * 1.5 + G.lv * 25);
+    G.maxHp += 10 + G.stats.vit*2;
+    G.maxSp += 5  + G.stats.wis;
+    G.hp = G.maxHp; G.sp = G.maxSp;
+    if(G.lv % 3 === 0){
+      const keys = Object.keys(G.stats);
+      G.stats[keys[G.lv % keys.length]]++;
+    }
+    log("lvl","★ LEVEL UP! → Lv."+G.lv+" · HP & SP Restored!");
+    spawnFloat(window.innerWidth/2, window.innerHeight*0.4, "LEVEL "+G.lv+"!", "df-exp");
+    toast("LEVEL UP! Now Lv."+G.lv);
+    renderAll();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// COMBAT MATH
+// ═══════════════════════════════════════════════════
+function calcAtk(){
+  const wpn = G.equip.wpn ? (DB.items[G.equip.wpn]?.atk||0) : 0;
+  const buff = buffTimer>0 ? 1.25 : 1;
+  const ps   = 1 + G.prestigeStars * 0.10;
+  return Math.floor((G.stats.str*3.5 + wpn + G.lv*1.8) * buff * ps);
+}
+function calcMatk(){
+  const wpn = G.equip.wpn ? (DB.items[G.equip.wpn]?.matk||0) : 0;
+  const buff = buffTimer>0 ? 1.25 : 1;
+  const ps   = 1 + G.prestigeStars * 0.10;
+  return Math.floor((G.stats.int*5 + wpn + G.lv*1.5) * buff * ps);
+}
+function calcDef(){
+  const arm = G.equip.arm ? (DB.items[G.equip.arm]?.def||0) : 0;
+  return arm + G.stats.vit*0.5 + G.bonuses.def;
+}
+function calcClickDmg(){
+  const base = calcAtk() * 2.5;
+  return Math.max(1, Math.floor(base * (1 + G.bonuses.clickB)));
+}
+function calcHeroDps(){
+  let total = 0;
+  for(const [hid,hlv] of Object.entries(G.heroes)){
+    if(hlv <= 0) continue;
+    const hd = DB.heroes.find(h=>h.id===hid);
+    if(!hd) continue;
+    total += hd.baseDps * hlv * (1 + G.bonuses.hdpsB);
+  }
+  return Math.floor(total * (1 + G.prestigeStars*0.10));
+}
+
+// ═══════════════════════════════════════════════════
+// SKILL SYSTEM
+// ═══════════════════════════════════════════════════
+function useSkill(name){
+  const sd = DB.skills[name];
+  if(!sd) return;
+  if(G.sp < sd.sp){ toast("Not enough SP!"); return; }
+  if((SKcds[name]||0) > 0){ toast(name+" on cooldown: "+SKcds[name]+"s"); return; }
+
+  G.sp = Math.max(0, G.sp - sd.sp);
+  if(sd.cd > 0) SKcds[name] = sd.cd;
+
+  if(sd.type==="phys" || sd.type==="magic"){
+    const base  = sd.type==="magic" ? calcMatk() : calcAtk();
+    const crit  = Math.random() < (0.05 + G.bonuses.crit);
+    const critM = crit ? G.bonuses.critDmg : 1;
+    const dmg   = Math.max(1, Math.floor(base * sd.dmg * critM * (0.9+Math.random()*0.2)));
+    log("atk","["+name+"] "+(crit?"💥 CRIT! ":"")+"→ "+fmtNum(dmg)+" dmg");
+    spawnFloat(window.innerWidth/2, window.innerHeight*0.38, "["+name+"] "+fmtNum(dmg), crit?"df-crit":"df-click");
+    dealDmg(dmg, "skill", crit);
+  } else if(sd.type==="heal"){
+    const healAmt = (sd.heal||60) + G.stats.wis*6;
+    G.hp = Math.min(G.maxHp, G.hp + healAmt);
+    log("heal","✨ Heal: +"+healAmt+" HP");
+    spawnFloat(window.innerWidth/2, window.innerHeight*0.5, "+"+healAmt+" HP","df-heal");
+  } else if(sd.type==="buff"){
+    buffTimer = sd.dur||30;
+    log("heal","✨ Blessing active! +25% stats for "+buffTimer+"s");
+    toast("Blessing! +25% all stats for "+buffTimer+"s");
+  } else if(sd.type==="debuff"){
+    provokeTimer = 5;
+    log("atk","[Provoke] Enemy ATK reduced 25% for 5s!");
+    toast("Enemy ATK reduced!");
+  } else if(sd.type==="special"){
+    const em = getCurEnemy();
+    if(!em){ toast("No enemy!"); return; }
+    const ch = 25 + G.stats.lck*4;
+    if(Math.random()*100 < ch){
+      const drop = em.drops[Math.floor(Math.random()*em.drops.length)];
+      addInv(drop[0],1);
+      log("loot","🎭 Steal! Got "+DB.items[drop[0]]?.n);
+    } else log("sys","Steal failed.");
+  }
+  renderBars(); updateSkillsTab();
+}
+
+// ═══════════════════════════════════════════════════
+// INVENTORY
+// ═══════════════════════════════════════════════════
+function addInv(id,qty){
+  const ex = G.inv.find(s=>s.id===id);
+  if(ex) ex.q+=qty; else G.inv.push({id,q:qty});
+  if(activeTab==="inv") renderInvTab();
+}
+
+function useItem(id){
+  const slot = G.inv.find(s=>s.id===id);
+  if(!slot||slot.q<=0) return;
+  const it = DB.items[id];
+  if(!it || it.cat!=="Consumable") return;
+  if(it.effect==="healHP"){
+    G.hp=Math.min(G.maxHp,G.hp+it.val);
+    log("heal","🧪 "+it.n+": +"+it.val+" HP");
+    spawnFloat(window.innerWidth*0.5,window.innerHeight*0.5,"+"+it.val+" HP","df-heal");
+  } else if(it.effect==="healSP"){
+    G.sp=Math.min(G.maxSp,G.sp+it.val);
+    log("heal","🧪 "+it.n+": +"+it.val+" SP");
+  } else if(it.effect==="healBoth"){
+    G.hp=Math.min(G.maxHp,G.hp+it.val);
+    G.sp=Math.min(G.maxSp,G.sp+it.val2);
+    log("heal","🧪 "+it.n+": +"+it.val+" HP +"+it.val2+" SP");
+  } else if(it.effect==="haste"){
+    hasteTimer=it.val;
+    log("heal","⚡ Awakening Potion! +30s speed boost!");
+    toast("Haste active! Faster auto-attacks for "+it.val+"s");
+  }
+  slot.q--; if(slot.q<=0) G.inv=G.inv.filter(s=>s.q>0);
+  renderBars(); if(activeTab==="inv") renderInvTab();
+}
+
+function sellItem(id){
+  const slot = G.inv.find(s=>s.id===id);
+  if(!slot) return;
+  const it = DB.items[id];
+  if(!it) return;
+  G.zeny += it.sell * slot.q;
+  log("loot","Sold all "+it.n+" for "+(it.sell*slot.q)+"z");
+  G.inv = G.inv.filter(s=>s.id!==id);
+  renderLeft(); if(activeTab==="inv") renderInvTab();
+}
+
+function sellMaterials(){
+  let total=0;
+  G.inv = G.inv.filter(s=>{
+    const it=DB.items[s.id];
+    if(it&&it.cat==="Material"){ total+=it.sell*s.q; return false; }
+    return true;
+  });
+  G.zeny+=total;
+  log("loot","Sold all materials for "+fmtNum(total)+"z");
+  renderLeft(); if(activeTab==="inv") renderInvTab();
+}
+
+// ═══════════════════════════════════════════════════
+// TRAVEL
+// ═══════════════════════════════════════════════════
+function travelTo(zid){
+  const z = DB.zones[zid];
+  if(!z) return;
+  if(G.lv < z.lvReq){ toast("Need Lv."+z.lvReq+" for "+z.n); return; }
+  G.zone=zid; G.wave=1; G.waveKills=0; G.waveGoal=5;
+  document.getElementById("h-loc").textContent   = z.n.toUpperCase();
+  document.getElementById("stage-lbl").textContent = z.n.toUpperCase()+" — WAVE 1";
+  log("sys","🗺 Moved to "+z.n);
+  spawnEnemy(); renderMapTab(); toast("Entered "+z.n);
+}
+
+// ═══════════════════════════════════════════════════
+// UPGRADES
+// ═══════════════════════════════════════════════════
+function buyUpgrade(uid){
+  const upg = DB.upgrades.find(u=>u.id===uid);
+  if(!upg) return;
+  const cur = G.upgrades[uid]||0;
+  if(cur>=upg.maxLv){ toast("Already maxed!"); return; }
+  const cost = Math.floor(upg.cost * Math.pow(1.65, cur));
+  if(G.zeny<cost){ toast("Need "+fmtNum(cost)+" Zeny"); return; }
+  G.zeny -= cost;
+  G.upgrades[uid]=(cur+1);
+  const b = G.bonuses;
+  if(upg.eff==="atk")   { G.stats.str++; }
+  if(upg.eff==="hp")    { G.maxHp+=upg.val; G.hp=Math.min(G.hp+upg.val,G.maxHp); }
+  if(upg.eff==="sp")    { G.maxSp+=upg.val; }
+  if(upg.eff==="crit")  { b.crit+=upg.val; }
+  if(upg.eff==="critdmg"){ b.critDmg+=upg.val; }
+  if(upg.eff==="regen") { b.regen+=upg.val; }
+  if(upg.eff==="dps")   { b.dpsB+=upg.val; }
+  if(upg.eff==="hdps")  { b.hdpsB+=upg.val; }
+  if(upg.eff==="exp")   { b.expB+=upg.val; }
+  if(upg.eff==="zeny")  { b.zenyB+=upg.val; }
+  if(upg.eff==="click") { b.clickB+=upg.val; }
+  if(upg.eff==="def")   { b.def+=upg.val; }
+  log("ev","⬆ "+upg.n+" upgraded to Lv."+(cur+1));
+  renderLeft(); renderUpgTab();
+}
+
+// ═══════════════════════════════════════════════════
+// HEROES
+// ═══════════════════════════════════════════════════
+function hireOrUpgradeHero(hid){
+  const hd = DB.heroes.find(h=>h.id===hid);
+  if(!hd) return;
+  const cur = G.heroes[hid]||0;
+  if(cur>=hd.lvMax){ toast("Hero maxed!"); return; }
+  const cost = cur===0 ? hd.lvCost : Math.floor(hd.upCost * Math.pow(1.5, cur));
+  if(G.zeny<cost){ toast("Need "+fmtNum(cost)+" Zeny"); return; }
+  G.zeny -= cost;
+  G.heroes[hid] = cur+1;
+  if(cur===0) log("ev","🎉 Hired: "+hd.n+"!");
+  else        log("ev","⬆ "+hd.n+" → Lv."+(cur+1));
+  renderLeft(); renderHeroesTab();
+}
+
+// ═══════════════════════════════════════════════════
+// PRESTIGE
+// ═══════════════════════════════════════════════════
+function openPrestige(){
+  if(G.lv<25){ toast("Need Level 25 to Prestige!"); return; }
+  const stars = G.prestigeStars+1;
+  document.getElementById("prestige-reward").textContent = stars+" Prestige Star"+(stars>1?"s":"")+" (was "+G.prestigeStars+")";
+  document.getElementById("prestige-modal").classList.add("show");
+}
+function closePrestige(){ document.getElementById("prestige-modal").classList.remove("show"); }
+function doPrestige(){
+  closePrestige();
+  G.prestigeStars++;
+  const job = G.job; const name = G.name;
+  const jd  = DB.jobs[job];
+  log("prestige","★ PRESTIGE "+G.prestigeStars+"! Rune-Midgard resets — but your power grows!");
+
+  G.lv=1; G.exp=0; G.expMax=100;
+  G.hp=jd.hp; G.maxHp=jd.hp; G.sp=jd.sp; G.maxSp=jd.sp;
+  G.stats={...jd.stats};
+  G.zeny=500; G.zone=0; G.wave=1; G.waveKills=0; G.waveGoal=5;
+  G.inv=[{id:"400",q:5},{id:"402",q:3}];
+  G.equip={wpn:jd.wpn,arm:jd.arm,acc:null};
+  G.upgrades={}; G.heroes={};
+  G.bonuses={crit:0,critDmg:1.8,regen:1,dpsB:0,hdpsB:0,expB:0,zenyB:0,clickB:0,def:0};
+  G.kills=0;
+
+  spawnEnemy(); renderAll(); showTab("sk");
+  toast("★ Prestige "+G.prestigeStars+" active! +"+G.prestigeStars*10+"% all damage");
+}
+
+// ═══════════════════════════════════════════════════
+// COMMAND PARSER
+// ═══════════════════════════════════════════════════
+function sendCmd(){
+  const raw = document.getElementById("cmd-in").value.trim();
+  document.getElementById("cmd-in").value="";
+  if(!raw) return;
+  const v = raw.toLowerCase();
+  log("sys","> "+raw);
+
+  // potions
+  if(/use.*(potion|red|yellow|white|blue|awakening)/.test(v)){
+    const order=["403","404","401","400","402"];
+    let used=false;
+    for(const id of order){ const s=G.inv.find(s=>s.id===id); if(s&&s.q>0){useItem(id);used=true;break;} }
+    if(!used) log("sys","No usable potions in inventory!"); return;
+  }
+  // heal skill
+  if(v==="heal"&&G.skills.includes("Heal")){ useSkill("Heal"); return; }
+  // skill by name
+  for(const sk of G.skills){ if(v.includes(sk.toLowerCase())){ useSkill(sk); return; } }
+  // travel
+  const zmap={"prontera":0,"prontera field":0,"payon":1,"payon forest":1,"geffen":2,"geffen field":2,"geffen dungeon":3,"sphinx":4,"sphinx dungeon":4};
+  for(const[k,id] of Object.entries(zmap)){ if(v.includes(k)){travelTo(id);return;} }
+  // sell
+  if(/sell all/.test(v)||v==="sell"){ sellMaterials(); return; }
+  // buy item
+  const buyMatch = v.match(/buy (.+)/);
+  if(buyMatch){
+    const itemName = buyMatch[1];
+    const found = Object.entries(DB.items).find(([id,it])=>it.n.toLowerCase()===itemName);
+    if(found){
+      const [id,it]=found;
+      if(G.zeny>=it.buy){ G.zeny-=it.buy; addInv(id,1); log("loot","Bought "+it.n+" for "+it.buy+"z"); renderLeft(); }
+      else log("sys","Need "+it.buy+"z. You have "+G.zeny+"z");
+    } else log("sys","Item '"+itemName+"' not found in shop.");
+    return;
+  }
+  // equip
+  const eqMatch = v.match(/equip (.+)/);
+  if(eqMatch){
+    const iname = eqMatch[1];
+    const slot = G.inv.find(s=>DB.items[s.id]?.n.toLowerCase()===iname);
+    if(slot){
+      const it=DB.items[slot.id];
+      if(it.cat==="Weapon") G.equip.wpn=slot.id;
+      else if(it.cat==="Armor") G.equip.arm=slot.id;
+      else if(it.cat==="Acc") G.equip.acc=slot.id;
+      log("ev","Equipped: "+it.n); renderLeft(); renderInvTab();
+    } else log("sys","'"+iname+"' not in inventory.");
+    return;
+  }
+  // status
+  if(/status|stat|info|char/.test(v)){
+    log("sys","══ "+G.name+" ("+G.job+") Lv."+G.lv+" ★"+G.prestigeStars+" ══");
+    log("sys","HP:"+G.hp+"/"+G.maxHp+"  SP:"+G.sp+"/"+G.maxSp+"  EXP:"+G.exp+"/"+G.expMax);
+    log("sys","ATK:"+calcAtk()+"  MATK:"+calcMatk()+"  DEF:"+Math.floor(calcDef()));
+    log("sys","CRIT:"+(((0.05+G.bonuses.crit)*100).toFixed(0))+"%  ClickDmg:"+calcClickDmg());
+    log("sys","Zeny:"+fmtNum(G.zeny)+"  Kills:"+G.kills+"  Wave:"+G.wave+"  Zone:"+DB.zones[G.zone].n);
+    return;
+  }
+  // help
+  if(/help|cmd|command/.test(v)){
+    log("sys","Commands: use potion · use [skill] · go [zone] · buy [item] · equip [item] · sell · sell all · status");
+    log("sys","Zones: prontera field · payon forest · geffen field · geffen dungeon · sphinx dungeon");
+    return;
+  }
+  log("sys","Unknown command. Type 'help' for command list.");
+}
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
+function showTab(t){
+  activeTab=t;
+  document.querySelectorAll(".tab").forEach((el,i)=>{
+    const ts=["sk","inv","map","upg","heroes"];
+    el.classList.toggle("on", ts[i]===t);
+  });
+  if(t==="sk")     renderSkillsTab();
+  else if(t==="inv")    renderInvTab();
+  else if(t==="map")    renderMapTab();
+  else if(t==="upg")    renderUpgTab();
+  else if(t==="heroes") renderHeroesTab();
+}
+
+function updateSkillsTab(){ if(activeTab==="sk") renderSkillsTab(); }
+
+// ═══════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════
+function renderAll(){
+  renderBars(); renderLeft(); renderTopbar();
+  if(activeTab==="sk")     renderSkillsTab();
+  else if(activeTab==="inv")    renderInvTab();
+  else if(activeTab==="map")    renderMapTab();
+  else if(activeTab==="upg")    renderUpgTab();
+  else if(activeTab==="heroes") renderHeroesTab();
+}
+
+function renderBars(){
+  const pct=(v,m)=>Math.max(0,Math.min(100,(v/m)*100)).toFixed(1)+"%";
+  document.getElementById("b-hp").style.width  = pct(G.hp, G.maxHp);
+  document.getElementById("b-sp").style.width  = pct(G.sp, G.maxSp);
+  document.getElementById("b-exp").style.width = pct(G.exp,G.expMax);
+  document.getElementById("b-hpv").textContent = Math.floor(G.hp);
+  document.getElementById("b-hpm").textContent = G.maxHp;
+  document.getElementById("b-spv").textContent = Math.floor(G.sp);
+  document.getElementById("b-spm").textContent = G.maxSp;
+  document.getElementById("b-expv").textContent= Math.floor(G.exp);
+  document.getElementById("b-expm").textContent= G.expMax;
+  document.getElementById("b-wkills").textContent = G.waveKills;
+  document.getElementById("b-wgoal").textContent  = G.waveGoal;
+}
+function renderWaveBar(){
+  document.getElementById("b-wave").style.width = Math.min(100,(G.waveKills/G.waveGoal)*100)+"%";
+}
+
+function renderLeft(){
+  const jd = DB.jobs[G.job];
+  document.getElementById("p-emoji").textContent = jd?.e||"🧍";
+  document.getElementById("p-name").textContent  = G.name;
+  document.getElementById("p-class").textContent = G.job+" · Lv."+G.lv;
+  document.getElementById("p-prestige").textContent = G.prestigeStars>0 ? "★".repeat(G.prestigeStars)+" Prestige "+G.prestigeStars : "";
+
+  // stats
+  const labels={str:"STR",agi:"AGI",vit:"VIT",int:"INT",wis:"WIS",lck:"LCK"};
+  const prime = {Swordsman:"str",Mage:"int",Archer:"agi",Acolyte:"wis",Thief:"lck",Novice:"str"};
+  document.getElementById("stats-grid").innerHTML = Object.entries(G.stats).map(([k,v])=>
+    `<div class="sc"><span class="sn">${labels[k]}</span><span class="sv ${k===prime[G.job]?'hi':''}">${v}</span></div>`
+  ).join("");
+
+  // equip
+  const wi = G.equip.wpn?DB.items[G.equip.wpn]:null;
+  const ai = G.equip.arm?DB.items[G.equip.arm]:null;
+  const ac = G.equip.acc?DB.items[G.equip.acc]:null;
+  document.getElementById("eq-wpn").textContent  = wi?.n||"Unarmed";
+  document.getElementById("eq-wpna").textContent = wi?(wi.atk?"ATK "+wi.atk:"MATK "+(wi.matk||0)):"";
+  document.getElementById("eq-arm").textContent  = ai?.n||"None";
+  document.getElementById("eq-arma").textContent = ai?"DEF "+ai.def:"";
+  document.getElementById("eq-acc").textContent  = ac?.n||"—";
+
+  // bottom stats
+  document.getElementById("bs-zeny").textContent = fmtNum(G.zeny);
+  document.getElementById("bs-crit").textContent = ((0.05+G.bonuses.crit)*100).toFixed(0)+"%";
+  document.getElementById("bs-def").textContent  = Math.floor(calcDef());
+  document.getElementById("bs-star").textContent = G.prestigeStars;
+}
+
+function renderTopbar(){
+  document.getElementById("h-lv").textContent    = G.lv;
+  document.getElementById("h-hp").textContent    = Math.floor(G.hp);
+  document.getElementById("h-clk").textContent   = fmtNum(calcClickDmg());
+  document.getElementById("h-kills").textContent = fmtNum(G.kills);
+  document.getElementById("h-wave").textContent  = G.wave;
+}
+
+function updateEnemyBar(){
+  if(!G.enemy) return;
+  const pct = Math.max(0,(G.eHp/G.eMaxHp)*100).toFixed(1)+"%";
+  document.getElementById("e-hp-fill").style.width = pct;
+  document.getElementById("e-hp-txt").textContent  = fmtNum(Math.max(0,G.eHp))+"/"+fmtNum(G.eMaxHp);
+}
+
+// ── SKILLS TAB ──
+function renderSkillsTab(){
+  document.getElementById("tab-body").innerHTML = G.skills.map(sk=>{
+    const sd = DB.skills[sk]||{};
+    const cd = SKcds[sk]||0;
+    const isBuffActive = sk==="Blessing" && buffTimer>0;
+    return `<div class="sk-card ${cd>0?'cd':''} ${isBuffActive?'active-buff':''}" onclick="useSkill('${sk}')">
+      <div class="sk-l">
+        <div class="sk-n" style="color:${sd.col||'#b8c8e0'}">${sk}${isBuffActive?' ('+buffTimer+'s)':''}</div>
+        <div class="sk-d">${sd.desc||""}</div>
+      </div>
+      <div class="sk-r">
+        <div class="sk-sp">${sd.sp||0} SP</div>
+        <div class="sk-cd">${cd>0?cd+"s":"Ready"}</div>
+      </div>
+    </div>`;
+  }).join("")||'<div style="font-size:10px;color:var(--dim2);padding:8px">No skills</div>';
+}
+
+// ── INV TAB ──
+function renderInvTab(){
+  if(!G.inv.length){ document.getElementById("tab-body").innerHTML='<div style="font-size:10px;color:var(--dim2);padding:8px">Empty inventory</div>'; return; }
+  document.getElementById("tab-body").innerHTML = G.inv.map(slot=>{
+    const it=DB.items[slot.id]; if(!it) return "";
+    const canUse = it.cat==="Consumable";
+    const canSell= true;
+    return `<div class="inv-row">
+      <div class="ir-l">
+        <div class="ir-n">${it.n}</div>
+        <div class="ir-c">${it.cat}${it.atk?" · ATK "+it.atk:""}${it.def?" · DEF "+it.def:""}${it.matk?" · MATK "+it.matk:""}</div>
+      </div>
+      <div class="ir-r">
+        <span class="ir-q">×${slot.q}</span>
+        ${canUse?`<span class="use-pill" onclick="useItem('${slot.id}')">USE</span>`:''}
+        <span class="sell-pill" onclick="sellItem('${slot.id}')">SELL</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── MAP TAB ──
+function renderMapTab(){
+  document.getElementById("tab-body").innerHTML = DB.zones.map(z=>{
+    const locked = G.lv < z.lvReq;
+    const cur    = G.zone===z.id;
+    const mons   = DB.monsters.filter(m=>m.z===z.id&&!m.boss).map(m=>m.e+m.n).join(", ");
+    return `<div class="zone-card ${cur?'cur':''} ${locked?'lk':''}" onclick="${locked?"toast('Need Lv."+z.lvReq+"')":"travelTo("+z.id+")"}">
+      <div class="z-hdr">
+        <div class="z-name ${cur?'cur':''}">${cur?"● ":""}${z.n}</div>
+        <div class="z-badge ${cur?'cur':''} ${locked?'lk':''}">${locked?"LV"+z.lvReq+" LOCKED":cur?"CURRENT":"LV"+z.lvReq+"+"}</div>
+      </div>
+      <div class="z-desc">${z.desc}</div>
+      <div class="z-mults">EXP ×${z.expM.toFixed(1)}  Zeny ×${z.zenyM.toFixed(1)}</div>
+      <div class="z-desc" style="margin-top:3px;font-size:7px;color:var(--dim2)">Monsters: ${mons}</div>
+    </div>`;
+  }).join("");
+}
+
+// ── UPGRADES TAB ──
+function renderUpgTab(){
+  document.getElementById("tab-body").innerHTML = DB.upgrades.map(u=>{
+    const cur  = G.upgrades[u.id]||0;
+    const cost = Math.floor(u.cost*Math.pow(1.65,cur));
+    const maxed= cur>=u.maxLv;
+    const can  = !maxed && G.zeny>=cost;
+    return `<div class="upg-card ${can?'buyable':''} ${maxed?'maxed':''}" onclick="${!maxed?'buyUpgrade(\''+u.id+'\')':''}">
+      <div class="u-hdr">
+        <div class="u-name">${u.n}</div>
+        <div class="u-lv">Lv.${cur}/${u.maxLv}</div>
+      </div>
+      <div class="u-desc">${u.desc}</div>
+      <div class="u-cost">${maxed?"✓ MAXED":fmtNum(cost)+" z"}</div>
+      <div class="u-eff">Current: ${getUpgEffectStr(u,cur)}</div>
+    </div>`;
+  }).join("");
+}
+function getUpgEffectStr(u,cur){
+  if(cur===0) return "None";
+  if(u.eff==="crit") return "+"+(cur*u.val*100).toFixed(0)+"% crit";
+  if(u.eff==="critdmg") return "×"+(1.8+cur*u.val).toFixed(1)+" crit dmg";
+  if(u.eff==="dps")  return "+"+(cur*u.val*100).toFixed(0)+"% auto dps";
+  if(u.eff==="hdps") return "+"+(cur*u.val*100).toFixed(0)+"% hero dps";
+  if(u.eff==="exp")  return "+"+(cur*u.val*100).toFixed(0)+"% exp";
+  if(u.eff==="zeny") return "+"+(cur*u.val*100).toFixed(0)+"% zeny";
+  if(u.eff==="click")return "+"+(cur*u.val*100).toFixed(0)+"% click";
+  return "+"+cur*u.val;
+}
+
+// ── HEROES TAB ──
+function renderHeroesTab(){
+  document.getElementById("tab-body").innerHTML = DB.heroes.map(hd=>{
+    const cur  = G.heroes[hd.id]||0;
+    const cost = cur===0 ? hd.lvCost : Math.floor(hd.upCost*Math.pow(1.5,cur));
+    const maxed= cur>=hd.lvMax;
+    const dps  = cur>0 ? Math.floor(hd.baseDps*cur*(1+G.bonuses.hdpsB)) : 0;
+    const can  = !maxed && G.zeny>=cost;
+    return `<div class="hero-card ${cur>0?'unlocked':''} ${cur===0&&!can?'locked':''}">
+      <div class="h-hdr">
+        <div>
+          <div class="h-name">${hd.e} ${hd.n}</div>
+          <div style="font-size:8px;color:var(--dim2)">${hd.desc}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="h-dps">${cur>0?fmtNum(dps)+" DPS":"Not hired"}</div>
+          <div style="font-size:8px;color:var(--dim2)">Lv.${cur}/${hd.lvMax}</div>
+        </div>
+      </div>
+      ${cur>0?`<div class="h-bar-track"><div class="h-bar-fill" style="width:${(cur/hd.lvMax*100).toFixed(1)}%"></div></div>`:""}
+      <button class="hire-btn" onclick="hireOrUpgradeHero('${hd.id}')" ${maxed?"disabled":""}>
+        ${maxed?"✓ MAXED":cur===0?"HIRE — "+fmtNum(cost)+"z":"UPGRADE Lv."+(cur+1)+" — "+fmtNum(cost)+"z"}
+      </button>
+    </div>`;
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+function log(type, msg){
+  const el = document.getElementById("log");
+  const d  = document.createElement("div");
+  const ts = new Date().toLocaleTimeString("en",{hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  d.className="lg "+type;
+  d.innerHTML=`<span class="ts">${ts}</span>${msg}`;
+  el.appendChild(d);
+  while(el.children.length>80) el.removeChild(el.firstChild);
+  el.scrollTop=el.scrollHeight;
+}
+
+function spawnFloat(x,y,txt,cls){
+  const d=document.createElement("div");
+  d.className="dmg-float "+(cls||"df-click");
+  d.textContent=txt;
+  d.style.left=(x-20)+"px";
+  d.style.top =(y-30)+"px";
+  document.body.appendChild(d);
+  d.addEventListener("animationend",()=>d.remove());
+}
+
+function fmtNum(n){
+  if(n>=1e9) return (n/1e9).toFixed(2)+"B";
+  if(n>=1e6) return (n/1e6).toFixed(2)+"M";
+  if(n>=1e3) return (n/1e3).toFixed(1)+"K";
+  return Math.floor(n).toString();
+}
+
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.style.opacity="1";
+  clearTimeout(toastTmr);
+  toastTmr=setTimeout(()=>t.style.opacity="0",2200);
+}
+
+// KEY INPUT
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("cmd-in")?.addEventListener("keydown",e=>{if(e.key==="Enter")sendCmd();});
+  document.querySelectorAll(".c-opt").forEach(el=>{
+    el.addEventListener("click",()=>{
+      document.querySelectorAll(".c-opt").forEach(x=>x.classList.remove("on"));
+      el.classList.add("on");
+    });
+  });
+});
+</script>
+</body>
+</html>

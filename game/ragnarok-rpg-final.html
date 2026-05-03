@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ragnarok Online — AI Text RPG</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Cinzel:wght@400;700&display=swap');
+
+:root {
+  --gold: #d4af37;
+  --gold-bright: #ffd700;
+  --gold-dim: rgba(212,175,55,0.3);
+  --bg-deep: #06080f;
+  --bg-dark: #0d1020;
+  --bg-panel: #101528;
+  --bg-card: rgba(20,26,50,0.9);
+  --border: rgba(212,175,55,0.5);
+  --text: #b8bcc8;
+  --text-dim: #5a5f70;
+  --text-bright: #e8ecf4;
+  --hp-color: #e05252;
+  --sp-color: #4488dd;
+  --exp-color: #44bb77;
+  --combat-red: #ff4444;
+  --magic-purple: #9966ff;
+  --success-green: #44cc77;
+  --warn-amber: #ffaa22;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100%; height:100%;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+}
+
+/* SCANLINE OVERLAY */
+body::after {
+  content:'';
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+  pointer-events:none;
+  z-index:999;
+}
+
+/* LAYOUT */
+.shell {
+  display:grid;
+  grid-template-columns: 240px 1fr 220px;
+  grid-template-rows: 54px 1fr 130px;
+  height:100vh;
+  gap:0;
+}
+
+/* HEADER */
+.header {
+  grid-column: 1/-1;
+  background: linear-gradient(90deg, var(--bg-panel), #1a2040 50%, var(--bg-panel));
+  border-bottom: 1px solid var(--gold);
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 0 1.5rem;
+  box-shadow: 0 2px 20px rgba(212,175,55,0.2);
+}
+
+.logo {
+  font-family: 'Cinzel', serif;
+  font-size:20px;
+  color: var(--gold-bright);
+  text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  letter-spacing:3px;
+}
+
+.header-status {
+  display:flex; gap:1.5rem; align-items:center;
+  font-size:11px;
+}
+
+.header-stat {
+  color: var(--text-dim);
+}
+
+.header-stat span {
+  color: var(--gold);
+}
+
+.location-badge {
+  padding:3px 10px;
+  border:1px solid var(--border);
+  color: var(--gold);
+  font-size:10px;
+  letter-spacing:1px;
+  background: var(--gold-dim);
+}
+
+/* LEFT PANEL */
+.panel-left {
+  background: var(--bg-panel);
+  border-right:1px solid var(--border);
+  padding:1rem;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+}
+
+/* RIGHT PANEL */
+.panel-right {
+  background: var(--bg-panel);
+  border-left:1px solid var(--border);
+  padding:1rem;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+}
+
+/* GAME LOG */
+.log-area {
+  background: var(--bg-dark);
+  overflow-y:auto;
+  padding:1rem 1.2rem;
+  display:flex;
+  flex-direction:column;
+  gap:0.5rem;
+}
+
+/* INPUT AREA */
+.input-area {
+  grid-column:2;
+  background: var(--bg-panel);
+  border-top:1px solid var(--border);
+  padding:0.8rem 1.2rem;
+  display:flex;
+  flex-direction:column;
+  gap:0.6rem;
+}
+
+/* CHAR SECTION */
+.char-portrait {
+  text-align:center;
+  padding:0.8rem;
+  border:1px solid var(--border);
+  background: rgba(212,175,55,0.05);
+  position:relative;
+}
+
+.char-avatar {
+  font-size:40px;
+  line-height:1;
+  margin-bottom:0.4rem;
+}
+
+.char-name {
+  font-family:'Cinzel', serif;
+  font-size:13px;
+  color: var(--gold-bright);
+  margin-bottom:2px;
+}
+
+.char-class {
+  font-size:10px;
+  color: var(--text-dim);
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+/* STAT BARS */
+.bar-group { display:flex; flex-direction:column; gap:0.5rem; }
+
+.bar-row {
+  display:flex; flex-direction:column; gap:2px;
+}
+
+.bar-label {
+  display:flex; justify-content:space-between;
+  font-size:9px;
+  color: var(--text-dim);
+  letter-spacing:0.5px;
+}
+
+.bar-label span { color: var(--text); }
+
+.bar-track {
+  height:6px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid var(--border);
+  border-radius:0;
+  overflow:hidden;
+}
+
+.bar-fill {
+  height:100%;
+  transition:width 0.4s ease;
+}
+
+.bar-fill.hp { background: linear-gradient(90deg, #882222, var(--hp-color)); }
+.bar-fill.sp { background: linear-gradient(90deg, #224488, var(--sp-color)); }
+.bar-fill.exp { background: linear-gradient(90deg, #226644, var(--exp-color)); }
+
+/* STATS GRID */
+.stats-box {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px;
+}
+
+.stat-cell {
+  padding:3px 6px;
+  font-size:10px;
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(212,175,55,0.15);
+  display:flex; justify-content:space-between;
+}
+
+.stat-cell .sn { color: var(--text-dim); }
+.stat-cell .sv { color: var(--gold); }
+
+/* SECTION HEADERS */
+.section-head {
+  font-size:9px;
+  color: var(--gold-dim);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  border-bottom:1px solid rgba(212,175,55,0.2);
+  padding-bottom:3px;
+}
+
+/* EQUIPMENT SLOTS */
+.equip-slot {
+  padding:5px 8px;
+  border:1px solid rgba(212,175,55,0.2);
+  background:rgba(0,0,0,0.3);
+  font-size:10px;
+  display:flex; justify-content:space-between;
+  margin-bottom:2px;
+  cursor:pointer;
+  transition:border-color 0.2s;
+}
+
+.equip-slot:hover { border-color: var(--gold); }
+.equip-slot .eslot { color: var(--text-dim); }
+.equip-slot .ename { color: var(--text-bright); }
+
+/* INVENTORY */
+.inv-item {
+  padding:5px 8px;
+  border:1px solid rgba(212,175,55,0.15);
+  background:rgba(0,0,0,0.25);
+  font-size:10px;
+  margin-bottom:2px;
+  cursor:pointer;
+  transition:all 0.2s;
+  display:flex; justify-content:space-between;
+  align-items:center;
+}
+
+.inv-item:hover { background:rgba(212,175,55,0.1); border-color: var(--gold); }
+.inv-item .iname { color: var(--text-bright); }
+.inv-item .iqty { color: var(--gold); font-size:9px; }
+.inv-item .icat { color: var(--text-dim); font-size:8px; }
+
+/* SKILL ITEMS */
+.skill-item {
+  padding:5px 8px;
+  border:1px solid rgba(153,102,255,0.3);
+  background:rgba(80,0,120,0.2);
+  font-size:10px;
+  margin-bottom:2px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+
+.skill-item:hover { background:rgba(153,102,255,0.2); border-color: var(--magic-purple); }
+.skill-item .skname { color:#cc99ff; }
+.skill-item .sksp { color: var(--text-dim); font-size:9px; }
+
+/* QUEST ITEMS */
+.quest-item {
+  padding:6px 8px;
+  border:1px solid rgba(68,136,221,0.3);
+  background:rgba(20,40,80,0.3);
+  font-size:10px;
+  margin-bottom:4px;
+}
+
+.quest-item .qname { color:#77aaff; margin-bottom:2px; }
+.quest-item .qprog { color: var(--text-dim); font-size:9px; }
+
+/* LOG MESSAGES */
+.msg {
+  padding:6px 10px;
+  font-size:12px;
+  line-height:1.5;
+  border-left:3px solid var(--border);
+  background:rgba(0,0,0,0.2);
+  animation: msgIn 0.25s ease;
+}
+
+@keyframes msgIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.msg.player { border-color: var(--gold); color: var(--gold); background:rgba(212,175,55,0.05); }
+.msg.gm     { border-color: #4488dd; color: #a8c8f0; }
+.msg.combat { border-color: var(--combat-red); color: #ff9999; }
+.msg.success{ border-color: var(--success-green); color: #88ddaa; }
+.msg.system { border-color: var(--text-dim); color: var(--text-dim); font-size:10px; }
+.msg.warning{ border-color: var(--warn-amber); color: #ffcc66; }
+.msg.magic  { border-color: var(--magic-purple); color: #cc99ff; }
+.msg.loot   { border-color: #ffaa44; color: #ffcc77; }
+
+.msg-prefix {
+  font-size:9px;
+  color: var(--text-dim);
+  margin-bottom:2px;
+  letter-spacing:0.5px;
+}
+
+/* COMBAT BANNER */
+.combat-banner {
+  background:rgba(255,40,40,0.15);
+  border:1px solid rgba(255,40,40,0.5);
+  padding:6px 10px;
+  font-size:10px;
+  color: var(--combat-red);
+  text-align:center;
+  letter-spacing:1px;
+  animation: pulse 1.5s infinite;
+  display:none;
+}
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* ENEMY CARD */
+.enemy-card {
+  padding:8px;
+  border:1px solid rgba(255,80,80,0.4);
+  background:rgba(60,10,10,0.5);
+  font-size:10px;
+  display:none;
+}
+
+.enemy-name { color: var(--combat-red); font-size:12px; margin-bottom:4px; }
+.enemy-hp-bar { height:8px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,80,80,0.4); overflow:hidden; margin-top:3px; }
+.enemy-hp-fill { height:100%; background: linear-gradient(90deg, #882222, var(--combat-red)); transition:width 0.3s; }
+
+/* INPUT */
+.input-row {
+  display:flex; gap:6px;
+}
+
+.cmd-input {
+  flex:1;
+  padding:8px 10px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid var(--border);
+  color: var(--text-bright);
+  font-family:'Share Tech Mono', monospace;
+  font-size:12px;
+  outline:none;
+  transition:border-color 0.2s;
+}
+
+.cmd-input:focus { border-color: var(--gold); box-shadow:0 0 8px rgba(212,175,55,0.2); }
+.cmd-input::placeholder { color: var(--text-dim); }
+
+.cmd-btn {
+  padding:8px 18px;
+  background: var(--gold-dim);
+  border:1px solid var(--gold);
+  color: var(--gold);
+  cursor:pointer;
+  font-family:'Share Tech Mono', monospace;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  transition:all 0.2s;
+}
+
+.cmd-btn:hover { background:rgba(212,175,55,0.3); box-shadow:0 0 10px rgba(212,175,55,0.3); }
+.cmd-btn:active { transform:scale(0.97); }
+.cmd-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* QUICK ACTIONS */
+.quick-row {
+  display:grid;
+  grid-template-columns: repeat(5,1fr);
+  gap:4px;
+}
+
+.qbtn {
+  padding:5px 4px;
+  background:transparent;
+  border:1px solid rgba(212,175,55,0.3);
+  color: var(--text-dim);
+  cursor:pointer;
+  font-family:'Share Tech Mono', monospace;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  transition:all 0.2s;
+  text-align:center;
+}
+
+.qbtn:hover { background:rgba(212,175,55,0.1); color: var(--gold); border-color: var(--gold); }
+
+/* ZENY */
+.zeny-display {
+  text-align:center;
+  padding:6px;
+  border:1px solid rgba(212,175,55,0.3);
+  background:rgba(212,175,55,0.05);
+}
+
+.zeny-display .zamt { font-size:16px; color: var(--gold-bright); font-family:'Cinzel',serif; }
+.zeny-display .zlbl { font-size:8px; color: var(--text-dim); letter-spacing:2px; }
+
+/* EMPTY STATE */
+.empty-state { font-size:10px; color: var(--text-dim); font-style:italic; padding:4px; }
+
+/* SCROLLBARS */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:rgba(0,0,0,0.3); }
+::-webkit-scrollbar-thumb { background: rgba(212,175,55,0.4); border-radius:2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* LOADING DOT ANIMATION */
+.ldots::after {
+  content:'...';
+  animation: dots 1.2s steps(3,end) infinite;
+}
+
+@keyframes dots {
+  0%   { content:'.'; }
+  33%  { content:'..'; }
+  66%  { content:'...'; }
+  100% { content:'.'; }
+}
+
+/* CHAR CLASS BADGE */
+.class-badge {
+  display:inline-block;
+  padding:1px 6px;
+  border:1px solid var(--border);
+  font-size:8px;
+  color: var(--gold);
+  letter-spacing:1px;
+  margin-top:3px;
+}
+
+/* NOTIFY FLASH */
+@keyframes flash {
+  0%{background:rgba(212,175,55,0.3)} 100%{background:transparent}
+}
+
+.flash { animation: flash 0.5s ease; }
+
+/* TITLE SCREEN */
+#titleScreen {
+  position:fixed; top:0;left:0;right:0;bottom:0;
+  background:var(--bg-deep);
+  z-index:1000;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2rem;
+}
+
+.title-logo {
+  font-family:'Cinzel',serif;
+  font-size:48px;
+  color: var(--gold-bright);
+  text-shadow:0 0 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.2);
+  letter-spacing:6px;
+  text-align:center;
+}
+
+.title-sub {
+  font-size:13px;
+  color: var(--text-dim);
+  letter-spacing:4px;
+  text-transform:uppercase;
+}
+
+.title-form {
+  display:flex;
+  flex-direction:column;
+  gap:0.8rem;
+  width:320px;
+}
+
+.title-form label {
+  font-size:11px;
+  color: var(--text-dim);
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+.title-form input, .title-form select {
+  width:100%;
+  padding:10px 12px;
+  background:rgba(0,0,0,0.6);
+  border:1px solid var(--border);
+  color: var(--text-bright);
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;
+  outline:none;
+}
+
+.title-form input:focus, .title-form select:focus {
+  border-color: var(--gold);
+}
+
+.title-form select option {
+  background: var(--bg-dark);
+  color: var(--text-bright);
+}
+
+.start-btn {
+  width:100%;
+  padding:12px;
+  background: linear-gradient(90deg, rgba(212,175,55,0.2), rgba(212,175,55,0.35));
+  border:1px solid var(--gold);
+  color: var(--gold-bright);
+  font-family:'Cinzel',serif;
+  font-size:14px;
+  cursor:pointer;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  transition:all 0.3s;
+  margin-top:0.5rem;
+}
+
+.start-btn:hover {
+  background:rgba(212,175,55,0.3);
+  box-shadow:0 0 20px rgba(212,175,55,0.4);
+}
+
+.title-deco {
+  font-size:11px;
+  color: var(--text-dim);
+  text-align:center;
+  border:1px solid rgba(212,175,55,0.15);
+  padding:8px 20px;
+}
+</style>
+</head>
+<body>
+
+<!-- TITLE SCREEN -->
+<div id="titleScreen">
+  <div>
+    <div class="title-logo">RAGNAROK</div>
+    <div style="text-align:center;margin-top:4px;margin-bottom:2rem">
+      <span class="title-sub">Online — AI Text Adventure</span>
+    </div>
+  </div>
+
+  <div class="title-form">
+    <label>Your Name</label>
+    <input type="text" id="inputName" placeholder="Enter your character name..." maxlength="20">
+
+    <label>Choose Job Class</label>
+    <select id="inputJob">
+      <option value="Novice">Novice — Balanced starter</option>
+      <option value="Swordsman">Swordsman — High STR/VIT warrior</option>
+      <option value="Mage">Mage — High INT spellcaster</option>
+      <option value="Archer">Archer — High AGI ranged fighter</option>
+      <option value="Acolyte">Acolyte — High WIS healer/support</option>
+      <option value="Thief">Thief — High AGI/LCK rogue</option>
+    </select>
+
+    <button class="start-btn" onclick="startGame()">Begin Adventure</button>
+  </div>
+
+  <div class="title-deco">
+    AI-powered Game Master · Full combat system · Dynamic world
+  </div>
+</div>
+
+<!-- GAME SHELL -->
+<div class="shell" id="gameShell" style="display:none">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">⚔ RAGNAROK ONLINE</div>
+    <div class="header-status">
+      <div class="header-stat">Lv.<span id="hLv">1</span></div>
+      <div class="header-stat">HP <span id="hHp">40</span></div>
+      <div class="header-stat">SP <span id="hSp">40</span></div>
+      <div class="header-stat">EXP <span id="hExp">0</span>/<span id="hExpMax">100</span></div>
+      <div class="header-stat">Zeny <span id="hZeny">0</span></div>
+    </div>
+    <div class="location-badge" id="hLocation">PRONTERA</div>
+  </div>
+
+  <!-- LEFT PANEL -->
+  <div class="panel-left">
+
+    <div class="char-portrait">
+      <div class="char-avatar" id="classEmoji">🧍</div>
+      <div class="char-name" id="pName">—</div>
+      <div class="char-class" id="pClass">—</div>
+    </div>
+
+    <div class="bar-group">
+      <div class="bar-row">
+        <div class="bar-label">HP <span><span id="bHp">40</span>/<span id="bHpMax">40</span></span></div>
+        <div class="bar-track"><div class="bar-fill hp" id="barHp" style="width:100%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">SP <span><span id="bSp">40</span>/<span id="bSpMax">40</span></span></div>
+        <div class="bar-track"><div class="bar-fill sp" id="barSp" style="width:100%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label">EXP <span><span id="bExp">0</span>/<span id="bExpMax">100</span></span></div>
+        <div class="bar-track"><div class="bar-fill exp" id="barExp" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-head" style="margin-bottom:6px">Stats</div>
+      <div class="stats-box" id="statsBox"></div>
+    </div>
+
+    <div>
+      <div class="section-head" style="margin-bottom:6px">Equipment</div>
+      <div class="equip-slot"><span class="eslot">WPN</span><span class="ename" id="eWeapon">Unarmed</span></div>
+      <div class="equip-slot"><span class="eslot">ARM</span><span class="ename" id="eArmor">No Armor</span></div>
+      <div class="equip-slot"><span class="eslot">ACC</span><span class="ename" id="eAcc">—</span></div>
+    </div>
+
+    <div style="margin-top:auto">
+      <div class="zeny-display">
+        <div class="zlbl">Zeny</div>
+        <div class="zamt" id="pZeny">0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME LOG -->
+  <div class="log-area" id="gameLog">
+    <div class="msg system">
+      <div class="msg-prefix">SYSTEM</div>
+      Connecting to Rune-Midgard...
+    </div>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-area">
+    <div class="input-row">
+      <input type="text" class="cmd-input" id="cmdInput"
+        placeholder="What do you do? (type freely or use quick actions below)"
+        autocomplete="off">
+      <button class="cmd-btn" id="cmdBtn" onclick="submit()">Send</button>
+    </div>
+    <div class="quick-row">
+      <button class="qbtn" onclick="q('look around')">👁 Look</button>
+      <button class="qbtn" onclick="q('explore the area')">🗺 Explore</button>
+      <button class="qbtn" onclick="q('hunt a monster')">⚔ Hunt</button>
+      <button class="qbtn" onclick="q('rest and recover')">💤 Rest</button>
+      <button class="qbtn" onclick="q('check inventory')">🎒 Bag</button>
+      <button class="qbtn" onclick="q('go to town')">🏙 Town</button>
+      <button class="qbtn" onclick="q('talk to npc')">💬 NPC</button>
+      <button class="qbtn" onclick="q('use a healing potion')">🧪 Heal</button>
+      <button class="qbtn" onclick="q('check my status and stats')">📊 Status</button>
+      <button class="qbtn" onclick="q('help me with commands')">❓ Help</button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel-right">
+
+    <!-- COMBAT BANNER -->
+    <div class="combat-banner" id="combatBanner">⚔ COMBAT ACTIVE ⚔</div>
+
+    <!-- ENEMY CARD -->
+    <div class="enemy-card" id="enemyCard">
+      <div class="enemy-name" id="eName">—</div>
+      <div style="font-size:9px;color:var(--text-dim)">HP</div>
+      <div class="enemy-hp-bar"><div class="enemy-hp-fill" id="eHpBar" style="width:100%"></div></div>
+      <div style="font-size:9px;color:var(--text-dim);margin-top:4px">
+        Lv.<span id="eLevel">?</span> &nbsp;·&nbsp; <span id="eElement">?</span>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div>
+      <div class="section-head" style="margin-bottom:6px">Inventory</div>
+      <div id="inventoryPanel"><div class="empty-state">Empty</div></div>
+    </div>
+
+    <!-- SKILLS -->
+    <div>
+      <div class="section-head" style="margin-bottom:6px">Skills</div>
+      <div id="skillsPanel"><div class="empty-state">No skills yet</div></div>
+    </div>
+
+    <!-- QUESTS -->
+    <div>
+      <div class="section-head" style="margin-bottom:6px">Quests</div>
+      <div id="questsPanel"><div class="empty-state">No active quests</div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// =========================================================
+// DATABASE
+// =========================================================
+const DB = {
+  items: {
+    "001":{"id":"001","name":"Phracon","cat":"Material","wt":1,"buy":2500,"sell":750,"desc":"Hard material for equipment upgrades.","rarity":"common"},
+    "002":{"id":"002","name":"Emveretarcon","cat":"Material","wt":1,"buy":5000,"sell":1500,"desc":"Fine material for armor refinement.","rarity":"uncommon"},
+    "003":{"id":"003","name":"Elunium","cat":"Material","wt":2,"buy":8000,"sell":2400,"desc":"Precious ore for armor upgrades.","rarity":"uncommon"},
+    "004":{"id":"004","name":"Oridecon","cat":"Material","wt":2,"buy":8000,"sell":2400,"desc":"Precious ore for weapon upgrades.","rarity":"uncommon"},
+    "005":{"id":"005","name":"Iron Ore","cat":"Material","wt":3,"buy":1000,"sell":300,"desc":"Raw iron for blacksmithing.","rarity":"common"},
+    "100":{"id":"100","name":"Short Sword","cat":"Weapon","wt":45,"buy":500,"sell":150,"desc":"Basic beginner sword.","rarity":"common","atk":24,"slots":0},
+    "101":{"id":"101","name":"Broadsword","cat":"Weapon","wt":85,"buy":2000,"sell":600,"desc":"Well-balanced combat sword.","rarity":"uncommon","atk":48,"slots":1},
+    "102":{"id":"102","name":"Claymore","cat":"Weapon","wt":138,"buy":5000,"sell":1500,"desc":"Heavy two-handed sword.","rarity":"rare","atk":95,"slots":1},
+    "110":{"id":"110","name":"Dagger","cat":"Weapon","wt":30,"buy":300,"sell":90,"desc":"Quick light blade.","rarity":"common","atk":15,"slots":0},
+    "120":{"id":"120","name":"Staff","cat":"Weapon","wt":60,"buy":600,"sell":180,"desc":"Magical staff for spellcasters.","rarity":"common","atk":10,"matk":18,"slots":0},
+    "130":{"id":"130","name":"Short Bow","cat":"Weapon","wt":50,"buy":700,"sell":210,"desc":"Basic ranged bow.","rarity":"common","atk":20,"range":7,"slots":0},
+    "200":{"id":"200","name":"Coat","cat":"Armor","wt":35,"buy":400,"sell":120,"desc":"Basic light protection.","rarity":"common","def":6,"slots":1},
+    "201":{"id":"201","name":"Leather Armor","cat":"Armor","wt":55,"buy":1200,"sell":360,"desc":"Durable leather armor.","rarity":"uncommon","def":12,"slots":1},
+    "202":{"id":"202","name":"Plate Armor","cat":"Armor","wt":95,"buy":3500,"sell":1050,"desc":"Heavy full plate armor.","rarity":"uncommon","def":22,"slots":1},
+    "400":{"id":"400","name":"Red Potion","cat":"Consumable","wt":3,"buy":50,"sell":15,"desc":"Restores 45 HP.","rarity":"common","effect":"healHP","val":45},
+    "401":{"id":"401","name":"Yellow Potion","cat":"Consumable","wt":3,"buy":100,"sell":30,"desc":"Restores 150 HP.","rarity":"common","effect":"healHP","val":150},
+    "402":{"id":"402","name":"Blue Potion","cat":"Consumable","wt":3,"buy":100,"sell":30,"desc":"Restores 40 SP.","rarity":"common","effect":"healSP","val":40},
+    "403":{"id":"403","name":"White Potion","cat":"Consumable","wt":3,"buy":1500,"sell":450,"desc":"Restores 200 HP and 100 SP.","rarity":"uncommon","effect":"healBoth","val":200,"val2":100},
+  },
+  monsters: {
+    "1001":{"id":"1001","name":"Poring","emoji":"🟣","lv":1,"hp":10,"atk":3,"exp":3,"jexp":4,"zeny":[50,150],"element":"Water","desc":"Gelatinous pink blob.","drops":[{id:"001",rate:80},{id:"005",rate:20}]},
+    "1002":{"id":"1002","name":"Lunatic","emoji":"🐰","lv":2,"hp":15,"atk":5,"exp":5,"jexp":7,"zeny":[80,200],"element":"Wind","desc":"Cute but tricky flying creature.","drops":[{id:"001",rate:60}]},
+    "1003":{"id":"1003","name":"Chonchon","emoji":"🐝","lv":3,"hp":18,"atk":6,"exp":8,"jexp":10,"zeny":[100,250],"element":"Wind","desc":"Buzzing insectoid with sharp stingers.","drops":[{id:"005",rate:50}]},
+    "1004":{"id":"1004","name":"Rocker","emoji":"🪨","lv":5,"hp":30,"atk":10,"exp":15,"jexp":18,"zeny":[200,500],"element":"Earth","desc":"Rock golem with slow heavy attacks.","drops":[{id:"002",rate:40}]},
+    "1005":{"id":"1005","name":"Creamy","emoji":"🦋","lv":6,"hp":35,"atk":12,"exp":18,"jexp":22,"zeny":[250,600],"element":"Fire","desc":"Ethereal butterfly-like creature.","drops":[{id:"003",rate:40}]},
+    "1006":{"id":"1006","name":"Thief Bug","emoji":"🐛","lv":7,"hp":40,"atk":14,"exp":22,"jexp":26,"zeny":[300,700],"element":"Earth","desc":"Predatory bug that steals from adventurers.","drops":[{id:"002",rate:45}]},
+    "1007":{"id":"1007","name":"Archer Skeleton","emoji":"💀","lv":10,"hp":60,"atk":20,"exp":40,"jexp":50,"zeny":[500,1200],"element":"Undead","desc":"Skeletal marksman with deadly aim.","drops":[{id:"003",rate:55},{id:"004",rate:15}]},
+    "1008":{"id":"1008","name":"Mummy","emoji":"🧟","lv":15,"hp":85,"atk":28,"exp":75,"jexp":95,"zeny":[800,2000],"element":"Undead","desc":"Cursed bandaged undead from ancient tombs.","drops":[{id:"004",rate:60}]},
+  },
+  jobs: {
+    "Novice":   {emoji:"🧍",hp:40,sp:40,stats:{str:1,agi:1,vit:1,int:1,wis:1,lck:1},skills:["Basic Slash"],weapon:"100",armor:"200",desc:"Balanced beginner."},
+    "Swordsman":{emoji:"⚔️", hp:65,sp:30,stats:{str:4,agi:2,vit:3,int:1,wis:2,lck:1},skills:["Bash","Provoke"],weapon:"101",armor:"201",desc:"Melee powerhouse."},
+    "Mage":     {emoji:"🔮",hp:35,sp:80,stats:{str:1,agi:1,vit:1,int:5,wis:3,lck:1},skills:["Fire Bolt","Cold Bolt"],weapon:"120",armor:"200",desc:"Magic specialist."},
+    "Archer":   {emoji:"🏹",hp:45,sp:45,stats:{str:2,agi:5,vit:1,int:1,wis:2,lck:2},skills:["Arrow Shower","Snipe"],weapon:"130",armor:"200",desc:"Ranged precision fighter."},
+    "Acolyte":  {emoji:"✨",hp:40,sp:70,stats:{str:1,agi:2,vit:2,int:2,wis:5,lck:1},skills:["Heal","Blessing"],weapon:"120",armor:"200",desc:"Holy support caster."},
+    "Thief":    {emoji:"🗡️", hp:45,sp:40,stats:{str:2,agi:5,vit:1,int:1,wis:1,lck:4},skills:["Steal","Backstab"],weapon:"110",armor:"200",desc:"Agile rogue."},
+  },
+  skills: {
+    "Basic Slash":{"sp":0,"desc":"Basic melee strike.","dmg":1.0,"type":"physical"},
+    "Bash":       {"sp":4,"desc":"Powerful blow, stuns on crit.","dmg":1.8,"type":"physical"},
+    "Provoke":    {"sp":2,"desc":"Enrage foe, raising atk but lowering def.","dmg":0,"type":"status"},
+    "Fire Bolt":  {"sp":12,"desc":"Fiery bolt of magic energy.","dmg":2.0,"type":"magic"},
+    "Cold Bolt":  {"sp":12,"desc":"Ice bolt that slows the target.","dmg":1.8,"type":"magic"},
+    "Arrow Shower":{"sp":15,"desc":"Rain of arrows hitting multiple foes.","dmg":1.5,"type":"physical"},
+    "Snipe":      {"sp":10,"desc":"Precise single shot, ignores some defense.","dmg":2.2,"type":"physical"},
+    "Heal":       {"sp":14,"desc":"Restore HP using holy magic.","dmg":0,"heal":60,"type":"magic"},
+    "Blessing":   {"sp":20,"desc":"Buff that raises all stats temporarily.","dmg":0,"type":"support"},
+    "Steal":      {"sp":5,"desc":"Attempt to steal an item from the enemy.","dmg":0,"type":"special"},
+    "Backstab":   {"sp":8,"desc":"Attack from the shadows for massive damage.","dmg":2.5,"type":"physical"},
+  },
+  locations: {
+    "Prontera":       {type:"City",  safe:true, monsters:[],         desc:"The grand capital of Rune-Midgard."},
+    "Prontera Field": {type:"Field", safe:false,monsters:["1001","1002","1003","1004"],desc:"Rolling grasslands just outside Prontera."},
+    "Payon":          {type:"City",  safe:true, monsters:[],         desc:"Mystical forest town in the east."},
+    "Payon Field":    {type:"Field", safe:false,monsters:["1003","1005","1006"],desc:"Lush forest paths around Payon."},
+    "Geffen":         {type:"City",  safe:true, monsters:[],         desc:"City of wizards and arcane research."},
+    "Geffen Dungeon": {type:"Dungeon",safe:false,monsters:["1007","1008"],desc:"Dark underground lair beneath Geffen."},
+    "Izlude":         {type:"City",  safe:true, monsters:[],         desc:"Peaceful island port town."},
+  },
+};
+
+// =========================================================
+// GAME STATE
+// =========================================================
+let G = {};
+let chatHistory = [];
+let busy = false;
+
+function startGame() {
+  const name = document.getElementById("inputName").value.trim() || "Adventurer";
+  const job  = document.getElementById("inputJob").value;
+  const jd   = DB.jobs[job];
+
+  G = {
+    name,
+    job,
+    level: 1,
+    exp:   0,
+    expMax: 100,
+    hp:    jd.hp,
+    maxHp: jd.hp,
+    sp:    jd.sp,
+    maxSp: jd.sp,
+    stats: {...jd.stats},
+    zeny:  0,
+    location: "Prontera",
+    inventory: [
+      {id:"400", qty:3},
+      {id:"402", qty:2},
+    ],
+    equipment: {
+      weapon: jd.weapon,
+      armor:  jd.armor,
+      acc:    null,
+    },
+    skills: [...jd.skills],
+    quests: [],
+    inCombat: false,
+    enemy: null,     // monster id
+    enemyHp: 0,
+    enemyMaxHp: 0,
+    kills: 0,
+    steps: 0,
+  };
+
+  document.getElementById("titleScreen").style.display = "none";
+  document.getElementById("gameShell").style.display = "grid";
+
+  renderUI();
+  addLog("system", `Welcome to Ragnarok Online, ${G.name}!`);
+  addLog("system", `You begin your journey as a ${G.job} in Prontera.`);
+  addLog("gm", `${DB.jobs[job].emoji} ${G.name} — the ${job} — opens their eyes to the bustle of Prontera's main square. The smell of roasting meat, distant forge hammers and the chatter of merchants fills the air. A guard notices you and nods. "New adventurer, eh? The fields outside the city are a good place to start. Be careful, though — even Porings can overwhelm the unprepared." Your adventure begins.`);
+  addLog("system", "Type freely or use the quick action buttons. The AI Game Master will respond to anything.");
+}
+
+// =========================================================
+// RENDER UI
+// =========================================================
+function renderUI() {
+  const j = DB.jobs[G.job];
+
+  // Header
+  document.getElementById("hLv").textContent     = G.level;
+  document.getElementById("hHp").textContent     = G.hp;
+  document.getElementById("hSp").textContent     = G.sp;
+  document.getElementById("hExp").textContent    = G.exp;
+  document.getElementById("hExpMax").textContent = G.expMax;
+  document.getElementById("hZeny").textContent   = G.zeny.toLocaleString();
+  document.getElementById("hLocation").textContent = G.location.toUpperCase();
+
+  // Left panel
+  document.getElementById("classEmoji").textContent = j ? j.emoji : "🧍";
+  document.getElementById("pName").textContent  = G.name;
+  document.getElementById("pClass").textContent = `${G.job} · Lv ${G.level}`;
+  document.getElementById("pZeny").textContent  = G.zeny.toLocaleString();
+
+  // Bars
+  const hp  = Math.max(0, Math.min(100, (G.hp / G.maxHp) * 100));
+  const sp  = Math.max(0, Math.min(100, (G.sp / G.maxSp) * 100));
+  const exp = Math.max(0, Math.min(100, (G.exp / G.expMax) * 100));
+  document.getElementById("barHp").style.width   = hp + "%";
+  document.getElementById("barSp").style.width   = sp + "%";
+  document.getElementById("barExp").style.width  = exp + "%";
+  document.getElementById("bHp").textContent     = G.hp;
+  document.getElementById("bHpMax").textContent  = G.maxHp;
+  document.getElementById("bSp").textContent     = G.sp;
+  document.getElementById("bSpMax").textContent  = G.maxSp;
+  document.getElementById("bExp").textContent    = G.exp;
+  document.getElementById("bExpMax").textContent = G.expMax;
+
+  // Stats
+  document.getElementById("statsBox").innerHTML = Object.entries(G.stats).map(([k,v])=>
+    `<div class="stat-cell"><span class="sn">${k.toUpperCase()}</span><span class="sv">${v}</span></div>`
+  ).join("");
+
+  // Equipment
+  const wpnItem = G.equipment.weapon ? DB.items[G.equipment.weapon] : null;
+  const armItem = G.equipment.armor  ? DB.items[G.equipment.armor]  : null;
+  document.getElementById("eWeapon").textContent = wpnItem ? wpnItem.name : "Unarmed";
+  document.getElementById("eArmor").textContent  = armItem ? armItem.name : "No Armor";
+  document.getElementById("eAcc").textContent    = "—";
+
+  // Inventory
+  const invEl = document.getElementById("inventoryPanel");
+  if (G.inventory.length === 0) {
+    invEl.innerHTML = '<div class="empty-state">Empty</div>';
+  } else {
+    invEl.innerHTML = G.inventory.map(slot => {
+      const it = DB.items[slot.id];
+      if (!it) return "";
+      return `<div class="inv-item" onclick="useItem('${slot.id}')">
+        <span class="iname">${it.name}</span>
+        <span>
+          <span class="iqty">x${slot.qty}</span>
+          <span class="icat"> ${it.cat}</span>
+        </span>
+      </div>`;
+    }).join("");
+  }
+
+  // Skills
+  const sklEl = document.getElementById("skillsPanel");
+  if (G.skills.length === 0) {
+    sklEl.innerHTML = '<div class="empty-state">No skills</div>';
+  } else {
+    sklEl.innerHTML = G.skills.map(sk => {
+      const sd = DB.skills[sk] || {};
+      return `<div class="skill-item" onclick="useSkill('${sk}')">
+        <div class="skname">${sk}</div>
+        <div class="sksp">SP: ${sd.sp || 0} · ${sd.type || "—"}</div>
+      </div>`;
+    }).join("");
+  }
+
+  // Quests
+  const qEl = document.getElementById("questsPanel");
+  if (G.quests.length === 0) {
+    qEl.innerHTML = '<div class="empty-state">No active quests</div>';
+  } else {
+    qEl.innerHTML = G.quests.map(q =>
+      `<div class="quest-item">
+        <div class="qname">${q.name}</div>
+        <div class="qprog">${q.progress || "In progress..."}</div>
+      </div>`
+    ).join("");
+  }
+
+  // Combat
+  const cb = document.getElementById("combatBanner");
+  const ec = document.getElementById("enemyCard");
+  if (G.inCombat && G.enemy) {
+    const em = DB.monsters[G.enemy];
+    cb.style.display = "block";
+    ec.style.display = "block";
+    document.getElementById("eName").textContent    = `${em.emoji} ${em.name}`;
+    document.getElementById("eLevel").textContent   = em.lv;
+    document.getElementById("eElement").textContent = em.element;
+    const pct = Math.max(0, (G.enemyHp / G.enemyMaxHp) * 100);
+    document.getElementById("eHpBar").style.width   = pct + "%";
+  } else {
+    cb.style.display = "none";
+    ec.style.display = "none";
+  }
+}
+
+// =========================================================
+// LOGGING
+// =========================================================
+function addLog(type, text) {
+  const log = document.getElementById("gameLog");
+  const div = document.createElement("div");
+  div.className = `msg ${type}`;
+
+  const labels = {player:"YOU",gm:"GAME MASTER",combat:"COMBAT",success:"✔ EVENT",
+                  system:"SYSTEM",warning:"⚠ WARNING",magic:"MAGIC",loot:"LOOT"};
+  div.innerHTML = `<div class="msg-prefix">${labels[type]||type.toUpperCase()}</div>${text}`;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+// =========================================================
+// QUICK ACTIONS
+// =========================================================
+function q(action) {
+  document.getElementById("cmdInput").value = action;
+  submit();
+}
+
+function useItem(id) {
+  const it = DB.items[id];
+  if (it && it.cat === "Consumable") {
+    q(`use my ${it.name}`);
+  }
+}
+
+function useSkill(sk) {
+  if (G.inCombat) {
+    q(`use ${sk} on the ${G.enemy ? DB.monsters[G.enemy].name : "enemy"}`);
+  } else {
+    q(`use skill ${sk}`);
+  }
+}
+
+// =========================================================
+// SUBMIT ACTION
+// =========================================================
+function submit() {
+  if (busy) return;
+  const inp = document.getElementById("cmdInput");
+  const action = inp.value.trim();
+  if (!action) return;
+  inp.value = "";
+  processAction(action);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("cmdInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") submit();
+  });
+});
+
+// =========================================================
+// CORE ACTION PROCESSOR
+// =========================================================
+async function processAction(action) {
+  busy = true;
+  document.getElementById("cmdBtn").disabled = true;
+  addLog("player", action);
+
+  // Pre-process mechanical outcomes before AI
+  const outcome = computeOutcome(action);
+
+  // Build AI prompt
+  const systemPrompt = buildSystemPrompt();
+  const userMsg = buildUserMessage(action, outcome);
+
+  chatHistory.push({role:"user", content: userMsg});
+  if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+
+  // Show typing indicator
+  const log = document.getElementById("gameLog");
+  const typing = document.createElement("div");
+  typing.className = "msg system";
+  typing.id = "typing";
+  typing.innerHTML = `<div class="msg-prefix">GAME MASTER</div><span class="ldots">Narrating</span>`;
+  log.appendChild(typing);
+  log.scrollTop = log.scrollHeight;
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 350,
+        system: systemPrompt,
+        messages: chatHistory,
+      })
+    });
+
+    const data = await resp.json();
+    document.getElementById("typing")?.remove();
+
+    if (data.error) {
+      addLog("warning", "AI error: " + data.error.message);
+    } else {
+      const gmText = data.content[0].text;
+      chatHistory.push({role:"assistant", content: gmText});
+
+      // Determine message type for styling
+      const lw = action.toLowerCase();
+      let logType = "gm";
+      if (lw.includes("attack")||lw.includes("fight")||lw.includes("bash")||lw.includes("strike")) logType = "combat";
+      if (lw.includes("heal")||lw.includes("potion")||lw.includes("rest")) logType = "success";
+      if (lw.includes("fire")||lw.includes("bolt")||lw.includes("magic")||lw.includes("spell")) logType = "magic";
+
+      addLog(logType, gmText);
+    }
+  } catch(e) {
+    document.getElementById("typing")?.remove();
+    addLog("warning", "Could not reach AI. Check your network. Error: " + e.message);
+  }
+
+  // Apply mechanical outcomes to state
+  applyOutcome(outcome, action);
+  renderUI();
+
+  busy = false;
+  document.getElementById("cmdBtn").disabled = false;
+  document.getElementById("cmdInput").focus();
+}
+
+// =========================================================
+// MECHANICAL OUTCOME COMPUTATION
+// =========================================================
+function computeOutcome(action) {
+  const lw = action.toLowerCase();
+  const out = {
+    type: "narrative",
+    hpDelta: 0,
+    spDelta: 0,
+    expGain: 0,
+    zenyGain: 0,
+    lootItems: [],
+    levelUp: false,
+    enemyDefeated: false,
+    combatStarted: false,
+    combatEnded: false,
+    playerDied: false,
+    newLocation: null,
+    messages: [],
+  };
+
+  // REST
+  if (lw.match(/\brest\b|\bsleep\b|\brecover\b/)) {
+    if (!G.inCombat) {
+      const hpRestore = Math.floor((G.maxHp - G.hp) * 0.6);
+      const spRestore = Math.floor((G.maxSp - G.sp) * 0.6);
+      out.hpDelta = hpRestore;
+      out.spDelta = spRestore;
+      out.type = "rest";
+      out.messages.push(`success:Rested — +${hpRestore} HP, +${spRestore} SP`);
+    } else {
+      out.messages.push("warning:You cannot rest while in combat!");
+    }
+    return out;
+  }
+
+  // USE ITEM / POTION
+  if (lw.match(/use.*(potion|heal|red potion|yellow potion|blue potion|white potion)/)) {
+    const potOrder = ["403","401","400","402"]; // best first
+    let used = null;
+    for (const pid of potOrder) {
+      const slot = G.inventory.find(s => s.id === pid);
+      if (slot && slot.qty > 0) { used = pid; break; }
+    }
+    if (used) {
+      const it = DB.items[used];
+      if (it.effect === "healHP")   { out.hpDelta += it.val; }
+      if (it.effect === "healSP")   { out.spDelta += it.val; }
+      if (it.effect === "healBoth") { out.hpDelta += it.val; out.spDelta += it.val2; }
+      out.useItem = used;
+      out.type = "item";
+      out.messages.push(`success:Used ${it.name} — ${it.desc}`);
+    } else {
+      out.messages.push("warning:No usable potions in your inventory!");
+    }
+    return out;
+  }
+
+  // STEAL (Thief skill)
+  if (lw.includes("steal") && G.inCombat && G.enemy) {
+    if (G.skills.includes("Steal")) {
+      const chance = 30 + G.stats.lck * 3;
+      if (Math.random() * 100 < chance) {
+        const em = DB.monsters[G.enemy];
+        const drop = em.drops[Math.floor(Math.random() * em.drops.length)];
+        out.lootItems.push({id: drop.id, qty: 1});
+        out.spDelta = -5;
+        out.messages.push(`loot:Steal successful! Got ${DB.items[drop.id].name}!`);
+      } else {
+        out.spDelta = -5;
+        out.messages.push("warning:Steal failed.");
+      }
+    }
+    return out;
+  }
+
+  // HEAL SKILL
+  if ((lw.includes("heal") || lw.includes("blessing")) && G.skills.includes("Heal")) {
+    const healAmt = 40 + G.stats.wis * 8;
+    const spCost  = DB.skills["Heal"].sp;
+    if (G.sp >= spCost) {
+      out.hpDelta = healAmt;
+      out.spDelta = -spCost;
+      out.type = "magic";
+      out.messages.push(`success:Holy Heal! +${healAmt} HP restored.`);
+    } else {
+      out.messages.push("warning:Not enough SP to cast Heal!");
+    }
+    return out;
+  }
+
+  // COMBAT — ATTACK / FIGHT / USE SKILL
+  const combatKeywords = /attack|fight|hunt|kill|battle|bash|slash|shoot|bolt|fire bolt|cold bolt|snipe|backstab|strike|hit|engage/;
+  if (lw.match(combatKeywords)) {
+    // Start combat if not already
+    if (!G.inCombat) {
+      const loc = DB.locations[G.location];
+      if (!loc || loc.safe || loc.monsters.length === 0) {
+        // Try to pick any monster appropriate to level
+        out.combatStarted = startCombat(out);
+        if (!out.combatStarted) {
+          out.messages.push("warning:There are no monsters here. Head to a field or dungeon to hunt.");
+          return out;
+        }
+      } else {
+        out.combatStarted = startCombat(out);
+      }
+    }
+
+    if (G.inCombat && G.enemy) {
+      resolveCombatRound(action, out);
+    }
+    return out;
+  }
+
+  // EXPLORE / MOVE
+  if (lw.match(/explore|wander|travel|move|go to|head to|walk/)) {
+    out.type = "explore";
+    out.steps = 1;
+    // Random chance of encounter
+    const loc = DB.locations[G.location];
+    if (loc && !loc.safe && Math.random() < 0.55) {
+      out.combatStarted = startCombat(out);
+    }
+    return out;
+  }
+
+  // TRAVEL TO SPECIFIC PLACE
+  for (const locName of Object.keys(DB.locations)) {
+    if (lw.includes(locName.toLowerCase())) {
+      out.newLocation = locName;
+      out.type = "travel";
+      out.messages.push(`success:Traveled to ${locName}.`);
+      return out;
+    }
+  }
+
+  return out;
+}
+
+function startCombat(out) {
+  const loc = DB.locations[G.location];
+  let pool = (loc && loc.monsters.length > 0)
+    ? loc.monsters
+    : Object.keys(DB.monsters).filter(id => DB.monsters[id].lv <= G.level + 3);
+
+  if (!pool || pool.length === 0) pool = ["1001"];
+
+  const eligible = pool.filter(id => DB.monsters[id] && DB.monsters[id].lv <= G.level + 4);
+  const chosen = eligible.length > 0
+    ? eligible[Math.floor(Math.random() * eligible.length)]
+    : pool[Math.floor(Math.random() * pool.length)];
+
+  const em = DB.monsters[chosen];
+  G.inCombat    = true;
+  G.enemy       = chosen;
+  G.enemyMaxHp  = em.hp + Math.floor(G.level * 2);
+  G.enemyHp     = G.enemyMaxHp;
+  out.combatStarted = true;
+  out.messages.push(`combat:⚔ ${em.emoji} ${em.name} (Lv.${em.lv}) appears!`);
+  return true;
+}
+
+function resolveCombatRound(action, out) {
+  const lw = action.toLowerCase();
+  const em = DB.monsters[G.enemy];
+
+  // -- Player attack --
+  let skillUsed = null;
+  let skillDmgMult = 1.0;
+  let spCost = 0;
+
+  for (const sk of G.skills) {
+    if (lw.includes(sk.toLowerCase())) {
+      const sd = DB.skills[sk];
+      if (sd && sd.dmg > 0) {
+        if (G.sp >= sd.sp) {
+          skillUsed = sk;
+          skillDmgMult = sd.dmg;
+          spCost = sd.sp;
+        } else {
+          out.messages.push(`warning:Not enough SP for ${sk}!`);
+        }
+      }
+      break;
+    }
+  }
+
+  const isPhysical = !skillUsed || DB.skills[skillUsed]?.type !== "magic";
+  const baseAtk = isPhysical
+    ? (G.stats.str * 4 + (DB.items[G.equipment.weapon]?.atk || 5))
+    : (G.stats.int * 5 + (DB.items[G.equipment.weapon]?.matk || 8));
+
+  const critRoll = Math.random() < (G.stats.lck * 0.02);
+  const hitRoll  = Math.random() < 0.85 + G.stats.agi * 0.01;
+
+  let playerDmg = 0;
+  if (hitRoll) {
+    playerDmg = Math.max(1, Math.floor((baseAtk * skillDmgMult * (0.85 + Math.random() * 0.3)) - (em.lv)));
+    if (critRoll) { playerDmg = Math.floor(playerDmg * 1.8); }
+  }
+
+  G.enemyHp -= playerDmg;
+  out.spDelta -= spCost;
+
+  if (hitRoll) {
+    out.messages.push(`combat:${critRoll?"💥 CRITICAL! ":""}${skillUsed ? `[${skillUsed}] ` : ""}Hit for ${playerDmg} damage! Enemy HP: ${Math.max(0,G.enemyHp)}/${G.enemyMaxHp}`);
+  } else {
+    out.messages.push(`combat:Your attack missed!`);
+  }
+
+  // -- Enemy attack --
+  if (G.enemyHp > 0) {
+    const enemyHit = Math.random() < 0.75;
+    if (enemyHit) {
+      const def = (DB.items[G.equipment.armor]?.def || 0) + G.stats.vit;
+      const enemyDmg = Math.max(1, Math.floor(em.atk * (0.8 + Math.random() * 0.4) - def * 0.5));
+      out.hpDelta -= enemyDmg;
+      out.messages.push(`combat:${em.emoji} ${em.name} hits you for ${enemyDmg} damage!`);
+    } else {
+      out.messages.push(`combat:${em.emoji} ${em.name}'s attack missed you!`);
+    }
+  }
+
+  // -- Enemy defeated? --
+  if (G.enemyHp <= 0) {
+    out.enemyDefeated = true;
+    out.expGain  = em.exp * (1 + Math.floor(G.level / 3));
+    out.zenyGain = Math.floor(em.zeny[0] + Math.random() * (em.zeny[1] - em.zeny[0]));
+    out.messages.push(`success:${em.emoji} ${em.name} defeated! +${out.expGain} EXP, +${out.zenyGain} Zeny`);
+
+    // Drops
+    for (const drop of em.drops) {
+      if (Math.random() * 100 < drop.rate) {
+        out.lootItems.push({id: drop.id, qty: 1});
+        out.messages.push(`loot:Item dropped: ${DB.items[drop.id].name}!`);
+      }
+    }
+  }
+
+  // -- Player died? --
+  const projHp = G.hp + out.hpDelta;
+  if (projHp <= 0) {
+    out.playerDied  = true;
+    out.enemyDefeated = false;
+    out.messages.push("warning:You have been defeated... Respawning in Prontera.");
+  }
+}
+
+// =========================================================
+// APPLY OUTCOMES
+// =========================================================
+function applyOutcome(out, action) {
+  // Print any computed messages
+  for (const m of out.messages) {
+    const [type, text] = m.split(":");
+    addLog(type || "system", text);
+  }
+
+  // HP / SP
+  G.hp = Math.min(G.maxHp, Math.max(0, G.hp + out.hpDelta));
+  G.sp = Math.min(G.maxSp, Math.max(0, G.sp + out.spDelta));
+
+  // Used item
+  if (out.useItem) {
+    const slot = G.inventory.find(s => s.id === out.useItem);
+    if (slot) { slot.qty--; if (slot.qty <= 0) G.inventory = G.inventory.filter(s => s.qty > 0); }
+  }
+
+  // Loot
+  for (const loot of out.lootItems) {
+    const existing = G.inventory.find(s => s.id === loot.id);
+    if (existing) existing.qty += loot.qty;
+    else G.inventory.push({id: loot.id, qty: loot.qty});
+  }
+
+  // EXP / Zeny
+  G.exp  += out.expGain;
+  G.zeny += out.zenyGain;
+
+  // Enemy defeated
+  if (out.enemyDefeated) {
+    G.kills++;
+    G.inCombat = false;
+    G.enemy    = null;
+
+    // Quest check
+    for (const q of G.quests) {
+      if (q.killTarget && DB.monsters[G.enemy]?.name === q.killTarget) {
+        q.killCount = (q.killCount||0) + 1;
+        q.progress  = `${q.killCount}/${q.killGoal} killed`;
+      }
+    }
+  }
+
+  // Player died
+  if (out.playerDied) {
+    G.hp        = Math.floor(G.maxHp * 0.5);
+    G.sp        = Math.floor(G.maxSp * 0.5);
+    G.inCombat  = false;
+    G.enemy     = null;
+    G.location  = "Prontera";
+    G.exp       = Math.max(0, G.exp - 20);
+  }
+
+  // Travel
+  if (out.newLocation && DB.locations[out.newLocation]) {
+    G.location  = out.newLocation;
+    G.inCombat  = false;
+    G.enemy     = null;
+  }
+
+  // Level up
+  while (G.exp >= G.expMax) {
+    G.exp   -= G.expMax;
+    G.level++;
+    G.expMax = Math.floor(G.expMax * 1.6);
+    G.maxHp += 10 + G.stats.vit * 2;
+    G.maxSp += 5  + G.stats.wis;
+    G.hp     = G.maxHp;
+    G.sp     = G.maxSp;
+    // Stat point added
+    const statKeys = Object.keys(G.stats);
+    G.stats[statKeys[G.level % statKeys.length]]++;
+    addLog("success", `★ LEVEL UP! You are now level ${G.level}! HP and SP fully restored!`);
+  }
+
+  // Check for low HP
+  if (G.hp < G.maxHp * 0.25 && G.hp > 0) {
+    addLog("warning", `⚠ HP critically low: ${G.hp}/${G.maxHp} — use a potion!`);
+  }
+}
+
+// =========================================================
+// AI SYSTEM PROMPT
+// =========================================================
+function buildSystemPrompt() {
+  const loc   = DB.locations[G.location] || {};
+  const wpn   = G.equipment.weapon ? DB.items[G.equipment.weapon] : null;
+  const arm   = G.equipment.armor  ? DB.items[G.equipment.armor]  : null;
+  const enemy = G.inCombat && G.enemy ? DB.monsters[G.enemy] : null;
+
+  return `You are the immersive Game Master of Ragnarok Online, a beloved fantasy MMORPG world.
+
+PLAYER STATE:
+- Name: ${G.name}  |  Job: ${G.job}  |  Level: ${G.level}
+- HP: ${G.hp}/${G.maxHp}  |  SP: ${G.sp}/${G.maxSp}
+- STR:${G.stats.str} AGI:${G.stats.agi} VIT:${G.stats.vit} INT:${G.stats.int} WIS:${G.stats.wis} LCK:${G.stats.lck}
+- Weapon: ${wpn ? wpn.name + " (ATK "+wpn.atk+")" : "Unarmed"}
+- Armor: ${arm ? arm.name + " (DEF "+arm.def+")" : "None"}
+- Location: ${G.location} — ${loc.desc || ""}
+- In Combat: ${G.inCombat ? "YES — Fighting " + (enemy ? enemy.name + " (Lv."+enemy.lv+", HP:" + G.enemyHp+"/"+G.enemyMaxHp+", Element:"+enemy.element+")" : "Enemy") : "No"}
+- Kills: ${G.kills}  |  Zeny: ${G.zeny}
+
+WORLD CONTEXT:
+- Locations: ${Object.keys(DB.locations).join(", ")}
+- Nearby monsters: ${loc.monsters ? loc.monsters.map(id => DB.monsters[id]?.name).join(", ") : "none (safe city)"}
+- Skills known: ${G.skills.join(", ")}
+- Inventory: ${G.inventory.map(s => DB.items[s.id]?.name + " x"+s.qty).join(", ") || "empty"}
+
+RULES:
+1. Write vivid, atmospheric narration in 2–4 sentences.
+2. The MECHANICAL system has already resolved combat numbers and HP changes. Your job is to NARRATE those results dramatically.
+3. Reference the player's exact job abilities — a Mage casts spells, a Thief backstabs, an Archer shoots arrows.
+4. Use the monster's element and personality in your narration.
+5. When in a safe city, describe NPCs, shops, ambient life, quest-givers.
+6. When an enemy is defeated, describe the victory and reward briefly.
+7. When the player dies, describe the defeat with dignity and mention respawning.
+8. NEVER break character. NEVER show game mechanics in your response.
+9. Match tone to action: serene for resting, tense for combat, curious for exploring.
+10. Keep responses under 120 words.`;
+}
+
+function buildUserMessage(action, out) {
+  let context = `Player action: "${action}"`;
+  if (out.hpDelta !== 0) context += ` | HP changed by ${out.hpDelta}`;
+  if (out.enemyDefeated) context += ` | Enemy was defeated!`;
+  if (out.playerDied)    context += ` | Player was defeated and respawned.`;
+  if (out.combatStarted) context += ` | Combat just started.`;
+  if (out.lootItems.length > 0) context += ` | Items dropped: ${out.lootItems.map(l => DB.items[l.id]?.name).join(", ")}`;
+  context += ` Narrate what happens.`;
+  return context;
+}
+</script>
+</body>
+</html>

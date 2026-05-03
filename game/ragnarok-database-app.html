@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ragnarok Online - Text-Based Database Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #c0c0c0;
+            line-height: 1.6;
+            padding: 0;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #1a1f3a 0%, #2d3561 50%, #1a1f3a 100%);
+            border-bottom: 2px solid #d4af37;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #d4af37;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin-bottom: 0.5rem;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            color: #a0a0a0;
+            letter-spacing: 1px;
+        }
+        
+        .nav-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .nav-btn {
+            padding: 0.6rem 1rem;
+            background: transparent;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(212, 175, 55, 0.1);
+            box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.3);
+        }
+        
+        .nav-btn.active {
+            background: rgba(212, 175, 55, 0.2);
+            box-shadow: inset 0 0 12px rgba(212, 175, 55, 0.5);
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .search-box {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.6rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #d4af37;
+            color: #c0c0c0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        
+        .search-input::placeholder {
+            color: #606060;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.2);
+        }
+        
+        .search-btn {
+            padding: 0.6rem 1rem;
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-btn:hover {
+            background: rgba(212, 175, 55, 0.3);
+            box-shadow: inset 0 0 8px rgba(212, 175, 55, 0.3);
+        }
+        
+        .entry {
+            background: rgba(45, 53, 97, 0.3);
+            border-left: 3px solid #d4af37;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .entry:hover {
+            background: rgba(45, 53, 97, 0.5);
+            border-left-color: #ffd700;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.1);
+        }
+        
+        .entry-title {
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 0.3rem;
+        }
+        
+        .entry-stat {
+            font-size: 11px;
+            color: #a0a0a0;
+            margin: 0.2rem 0;
+            padding-left: 1rem;
+        }
+        
+        .entry-stat .label {
+            color: #808080;
+            min-width: 80px;
+            display: inline-block;
+        }
+        
+        .entry-stat .value {
+            color: #c0c0c0;
+        }
+        
+        .detail-panel {
+            background: rgba(45, 53, 97, 0.4);
+            border: 1px solid #d4af37;
+            padding: 1.2rem;
+            margin-top: 1rem;
+            border-radius: 2px;
+        }
+        
+        .detail-title {
+            color: #ffd700;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid #d4af37;
+            padding-bottom: 0.5rem;
+        }
+        
+        .detail-content {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .detail-stat {
+            font-size: 12px;
+        }
+        
+        .detail-stat-label {
+            color: #808080;
+            font-weight: bold;
+        }
+        
+        .detail-stat-value {
+            color: #c0c0c0;
+            margin-top: 0.2rem;
+        }
+        
+        .stat-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 0.5px solid #d4af37;
+            margin-top: 0.3rem;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+        
+        .stat-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #d4af37, #ffd700);
+            transition: width 0.3s ease;
+        }
+        
+        .rarity-common { color: #c0c0c0; }
+        .rarity-uncommon { color: #4caf50; }
+        .rarity-rare { color: #2196f3; }
+        .rarity-epic { color: #9c27b0; }
+        .rarity-legendary { color: #ff9800; }
+        
+        .footer {
+            background: rgba(26, 31, 58, 0.8);
+            border-top: 1px solid #d4af37;
+            padding: 1rem;
+            text-align: center;
+            font-size: 10px;
+            color: #606060;
+        }
+        
+        .no-results {
+            text-align: center;
+            color: #808080;
+            padding: 2rem;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="title">⚔ RAGNAROK ONLINE ⚔</div>
+            <div class="subtitle">TEXT-BASED DATABASE INTERFACE v1.0</div>
+            <div class="nav-section">
+                <button class="nav-btn active" onclick="switchSection('items', this)">ITEMS</button>
+                <button class="nav-btn" onclick="switchSection('monsters', this)">MONSTERS</button>
+                <button class="nav-btn" onclick="switchSection('jobs', this)">JOBS</button>
+                <button class="nav-btn" onclick="switchSection('skills', this)">SKILLS</button>
+                <button class="nav-btn" onclick="switchSection('locations', this)">LOCATIONS</button>
+                <button class="nav-btn" onclick="switchSection('quests', this)">QUESTS</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- ITEMS SECTION -->
+            <div id="items" class="section active">
+                <div class="search-box">
+                    <input class="search-input" type="text" id="itemSearch" placeholder="Search items by name or ID..." onkeyup="searchItems()">
+                    <button class="search-btn" onclick="searchItems()">SEARCH</button>
+                </div>
+                <div id="itemsList"></div>
+            </div>
+            
+            <!-- MONSTERS SECTION -->
+            <div id="monsters" class="section">
+                <div class="search-box">
+                    <input class="search-input" type="text" id="monsterSearch" placeholder="Search monsters by name..." onkeyup="searchMonsters()">
+                    <button class="search-btn" onclick="searchMonsters()">SEARCH</button>
+                </div>
+                <div id="monstersList"></div>
+            </div>
+            
+            <!-- JOBS SECTION -->
+            <div id="jobs" class="section">
+                <div class="search-box">
+                    <input class="search-input" type="text" id="jobSearch" placeholder="Search jobs..." onkeyup="searchJobs()">
+                    <button class="search-btn" onclick="searchJobs()">SEARCH</button>
+                </div>
+                <div id="jobsList"></div>
+            </div>
+            
+            <!-- SKILLS SECTION -->
+            <div id="skills" class="section">
+                <div class="search-box">
+                    <input class="search-input" type="text" id="skillSearch" placeholder="Search skills..." onkeyup="searchSkills()">
+                    <button class="search-btn" onclick="searchSkills()">SEARCH</button>
+                </div>
+                <div id="skillsList"></div>
+            </div>
+            
+            <!-- LOCATIONS SECTION -->
+            <div id="locations" class="section">
+                <div id="locationsList"></div>
+            </div>
+            
+            <!-- QUESTS SECTION -->
+            <div id="quests" class="section">
+                <div class="search-box">
+                    <input class="search-input" type="text" id="questSearch" placeholder="Search quests..." onkeyup="searchQuests()">
+                    <button class="search-btn" onclick="searchQuests()">SEARCH</button>
+                </div>
+                <div id="questsList"></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            [RUNE-MIDGARD NETWORK] [DATABASE SYNC: ACTIVE] [RECORDS: 4.2K] [STATUS: ONLINE]
+        </div>
+    </div>
+    
+    <script>
+        // Embedded Database
+        const database = {
+            "version": "1.0.0",
+            "lastUpdated": "2026-05-02",
+            "items": {
+                "001": { "id": "001", "name": "Phracon", "category": "Material", "weight": 1, "buyPrice": 2500, "sellPrice": 750, "description": "A hard material used for strengthening equipment", "rarity": "common", "dropMonsters": ["Poring", "Lunatic"] },
+                "002": { "id": "002", "name": "Emveretarcon", "category": "Material", "weight": 1, "buyPrice": 5000, "sellPrice": 1500, "description": "Material for equipment refinement", "rarity": "uncommon", "dropMonsters": ["Rocker", "Thief Bug"] },
+                "003": { "id": "003", "name": "Elunium", "category": "Material", "weight": 2, "buyPrice": 8000, "sellPrice": 2400, "description": "Precious material for upgrading armor", "rarity": "uncommon", "dropMonsters": ["Archer Skeleton", "Creamy"] },
+                "004": { "id": "004", "name": "Oridecon", "category": "Material", "weight": 2, "buyPrice": 8000, "sellPrice": 2400, "description": "Precious material for upgrading weapons", "rarity": "uncommon", "dropMonsters": ["Mummy", "Cramp"] },
+                "005": { "id": "005", "name": "Iron Ore", "category": "Material", "weight": 3, "buyPrice": 1000, "sellPrice": 300, "description": "Raw material for blacksmith crafting", "rarity": "common", "dropMonsters": ["Poring", "Chonchon"] },
+                "100": { "id": "100", "name": "Short Sword", "category": "Weapon", "weight": 45, "buyPrice": 500, "sellPrice": 150, "description": "A basic sword for beginners", "rarity": "common", "requiredLevel": 1, "damage": 24 },
+                "101": { "id": "101", "name": "Broadsword", "category": "Weapon", "weight": 85, "buyPrice": 2000, "sellPrice": 600, "description": "A well-balanced sword with decent damage", "rarity": "uncommon", "requiredLevel": 10, "damage": 48 },
+                "102": { "id": "102", "name": "Claymore", "category": "Weapon", "weight": 138, "buyPrice": 5000, "sellPrice": 1500, "description": "A massive sword for skilled warriors", "rarity": "rare", "requiredLevel": 25, "damage": 95 },
+                "200": { "id": "200", "name": "Coat", "category": "Armor", "weight": 35, "buyPrice": 400, "sellPrice": 120, "description": "Light armor providing basic protection", "rarity": "common", "requiredLevel": 1, "armor": 6 },
+                "201": { "id": "201", "name": "Leather Armor", "category": "Armor", "weight": 55, "buyPrice": 1200, "sellPrice": 360, "description": "Leather protection for warriors", "rarity": "uncommon", "requiredLevel": 10, "armor": 12 },
+                "400": { "id": "400", "name": "Red Potion", "category": "Consumable", "weight": 3, "buyPrice": 50, "sellPrice": 15, "description": "Restores 45 HP", "rarity": "common", "effect": "healHP", "effectValue": 45 },
+                "401": { "id": "401", "name": "Yellow Potion", "category": "Consumable", "weight": 3, "buyPrice": 100, "sellPrice": 30, "description": "Restores 150 HP", "rarity": "common", "effect": "healHP", "effectValue": 150 },
+                "402": { "id": "402", "name": "Blue Potion", "category": "Consumable", "weight": 3, "buyPrice": 100, "sellPrice": 30, "description": "Restores 40 SP", "rarity": "common", "effect": "healSP", "effectValue": 40 }
+            },
+            "monsters": {
+                "1001": { "id": "1001", "name": "Poring", "level": 1, "hp": 10, "exp": 3, "jobExp": 4, "locations": ["Prontera Field", "Izlude Field"], "element": "Water", "description": "A small gelatinous monster", "size": "Small", "race": "Demi-Human" },
+                "1002": { "id": "1002", "name": "Lunatic", "level": 2, "hp": 15, "exp": 5, "jobExp": 7, "locations": ["Prontera Field"], "element": "Wind", "description": "A small flying poring variant", "size": "Small", "race": "Demi-Human" },
+                "1003": { "id": "1003", "name": "Chonchon", "level": 3, "hp": 18, "exp": 8, "jobExp": 10, "locations": ["Prontera Field", "Mjolnir Field"], "element": "Wind", "description": "A small flying bee-like monster", "size": "Small", "race": "Insect" },
+                "1004": { "id": "1004", "name": "Rocker", "level": 5, "hp": 30, "exp": 15, "jobExp": 18, "locations": ["Prontera Field", "Mjolnir Field"], "element": "Earth", "description": "A living stone creature", "size": "Medium", "race": "Formless" },
+                "1005": { "id": "1005", "name": "Creamy", "level": 6, "hp": 35, "exp": 18, "jobExp": 22, "locations": ["Izlude Field", "Geffen Field"], "element": "Fire", "description": "A creature with horn protection", "size": "Medium", "race": "Demi-Human" },
+                "1006": { "id": "1006", "name": "Thief Bug", "level": 7, "hp": 40, "exp": 22, "jobExp": 26, "locations": ["Payon Field", "Geffen Field"], "element": "Earth", "description": "A thieving insect creature", "size": "Small", "race": "Insect" },
+                "1007": { "id": "1007", "name": "Archer Skeleton", "level": 10, "hp": 60, "exp": 40, "jobExp": 50, "locations": ["Payon Dungeon", "Geffen Dungeon"], "element": "Undead", "description": "A skeleton wielding a bow", "size": "Medium", "race": "Undead" },
+                "1008": { "id": "1008", "name": "Mummy", "level": 15, "hp": 85, "exp": 75, "jobExp": 95, "locations": ["Mummy Dungeon", "Sphinx Dungeon"], "element": "Undead", "description": "A cursed wrapped corpse", "size": "Large", "race": "Undead" }
+            },
+            "jobs": {
+                "001": { "id": "001", "name": "Novice", "description": "The starting class for all adventurers", "baseStats": { "str": 1, "agi": 1, "vit": 1, "int": 1, "wis": 1, "lck": 1 }, "skills": ["Basic Attack", "Skill Point"] },
+                "002": { "id": "002", "name": "Swordsman", "description": "A warrior specializing in melee combat with swords", "baseStats": { "str": 4, "agi": 2, "vit": 3, "int": 1, "wis": 2, "lck": 1 }, "skills": ["Bash", "Magnum Break", "Provoke"] },
+                "003": { "id": "003", "name": "Mage", "description": "A spellcaster wielding the power of magic", "baseStats": { "str": 1, "agi": 1, "vit": 1, "int": 4, "wis": 3, "lck": 1 }, "skills": ["Fire Bolt", "Cold Bolt", "Lightning Bolt"] },
+                "004": { "id": "004", "name": "Archer", "description": "A skilled archer with precise ranged attacks", "baseStats": { "str": 2, "agi": 4, "vit": 1, "int": 1, "wis": 2, "lck": 2 }, "skills": ["Arrow Shower", "Aimed Shot", "Snipe"] },
+                "005": { "id": "005", "name": "Acolyte", "description": "A healer devoted to support and recovery magic", "baseStats": { "str": 1, "agi": 2, "vit": 2, "int": 2, "wis": 4, "lck": 1 }, "skills": ["Heal", "Blessing", "Cure"] },
+                "006": { "id": "006", "name": "Thief", "description": "A stealthy rogue with high agility", "baseStats": { "str": 2, "agi": 4, "vit": 1, "int": 1, "wis": 1, "lck": 3 }, "skills": ["Steal", "Backstab", "Escape"] }
+            },
+            "skills": {
+                "001": { "id": "001", "name": "Bash", "description": "A basic sword attack with increased damage", "job": "Swordsman", "type": "Physical", "maxLevel": 10, "cooldown": 3, "range": 1 },
+                "002": { "id": "002", "name": "Fire Bolt", "description": "Shoot a bolt of fire at an enemy", "job": "Mage", "type": "Magic", "maxLevel": 10, "cooldown": 2, "range": 5 },
+                "003": { "id": "003", "name": "Cold Bolt", "description": "Shoot a bolt of ice at an enemy", "job": "Mage", "type": "Magic", "maxLevel": 10, "cooldown": 2, "range": 5 },
+                "004": { "id": "004", "name": "Heal", "description": "Restore HP to yourself or an ally", "job": "Acolyte", "type": "Magic", "maxLevel": 10, "cooldown": 1, "range": 9 },
+                "005": { "id": "005", "name": "Steal", "description": "Attempt to steal an item from an enemy", "job": "Thief", "type": "Physical", "maxLevel": 10, "cooldown": 3, "range": 1 },
+                "006": { "id": "006", "name": "Arrow Shower", "description": "Rain arrows down on enemies in an area", "job": "Archer", "type": "Physical", "maxLevel": 10, "cooldown": 4, "range": 9 }
+            },
+            "locations": {
+                "001": { "id": "001", "name": "Prontera", "type": "City", "description": "The capital of Rune-Midgard, center of civilization", "connections": ["Izlude", "Payon", "Geffen"] },
+                "002": { "id": "002", "name": "Prontera Field", "type": "Field", "description": "Fields surrounding Prontera, peaceful for beginners", "levelRange": "1-15", "connections": ["Prontera", "Mjolnir Field"] },
+                "003": { "id": "003", "name": "Izlude", "type": "City", "description": "A quiet port town east of Prontera", "connections": ["Prontera", "Izlude Field"] },
+                "004": { "id": "004", "name": "Payon", "type": "City", "description": "A mystical town surrounded by forests", "connections": ["Prontera", "Payon Field"] },
+                "005": { "id": "005", "name": "Geffen", "type": "City", "description": "A magical town known for arcane research", "connections": ["Prontera", "Geffen Field"] }
+            },
+            "quests": {
+                "001": { "id": "001", "name": "Poring Hunt", "giver": "Guard", "location": "Prontera", "levelRequired": 1, "reward_exp": 100, "reward_zeny": 500, "description": "Hunt 10 Porings and bring proof to the Guard" },
+                "002": { "id": "002", "name": "Material Collection", "giver": "Blacksmith", "location": "Prontera", "levelRequired": 5, "reward_exp": 250, "reward_zeny": 1000, "description": "Collect Iron Ore for the Blacksmith" },
+                "003": { "id": "003", "name": "Thief Bug Extermination", "giver": "Captain", "location": "Payon", "levelRequired": 7, "reward_exp": 400, "reward_zeny": 2000, "description": "Hunt Thief Bugs and retrieve stolen goods" }
+            }
+        };
+        
+        function switchSection(section, btn) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(section).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            if (section === 'items') loadItems();
+            else if (section === 'monsters') loadMonsters();
+            else if (section === 'jobs') loadJobs();
+            else if (section === 'skills') loadSkills();
+            else if (section === 'locations') loadLocations();
+            else if (section === 'quests') loadQuests();
+        }
+        
+        function loadItems() {
+            const html = Object.values(database.items).map(item => `
+                <div class="entry" onclick="showItemDetail('${item.id}')">
+                    <div class="entry-title">${item.name}</div>
+                    <div class="entry-stat"><span class="label">ID:</span><span class="value">${item.id}</span></div>
+                    <div class="entry-stat"><span class="label">Type:</span><span class="value">${item.category}</span></div>
+                    <div class="entry-stat"><span class="label">Rarity:</span><span class="value rarity-${item.rarity}">${item.rarity.toUpperCase()}</span></div>
+                    <div class="entry-stat"><span class="label">Price:</span><span class="value">${item.buyPrice} zeny</span></div>
+                </div>
+            `).join('');
+            document.getElementById('itemsList').innerHTML = html;
+        }
+        
+        function loadMonsters() {
+            const html = Object.values(database.monsters).map(m => `
+                <div class="entry" onclick="showMonsterDetail('${m.id}')">
+                    <div class="entry-title">${m.name}</div>
+                    <div class="entry-stat"><span class="label">Level:</span><span class="value">${m.level}</span></div>
+                    <div class="entry-stat"><span class="label">HP:</span><span class="value">${m.hp}</span></div>
+                    <div class="entry-stat"><span class="label">EXP:</span><span class="value">${m.exp}</span></div>
+                    <div class="entry-stat"><span class="label">Element:</span><span class="value">${m.element}</span></div>
+                </div>
+            `).join('');
+            document.getElementById('monstersList').innerHTML = html;
+        }
+        
+        function loadJobs() {
+            const html = Object.values(database.jobs).map(j => `
+                <div class="entry" onclick="showJobDetail('${j.id}')">
+                    <div class="entry-title">${j.name}</div>
+                    <div class="entry-stat"><span class="label">Description:</span><span class="value">${j.description}</span></div>
+                    <div class="entry-stat"><span class="label">STR:</span><span class="value">${j.baseStats.str}</span></div>
+                </div>
+            `).join('');
+            document.getElementById('jobsList').innerHTML = html;
+        }
+        
+        function loadSkills() {
+            const html = Object.values(database.skills).map(s => `
+                <div class="entry" onclick="showSkillDetail('${s.id}')">
+                    <div class="entry-title">${s.name}</div>
+                    <div class="entry-stat"><span class="label">Job:</span><span class="value">${s.job}</span></div>
+                    <div class="entry-stat"><span class="label">Type:</span><span class="value">${s.type}</span></div>
+                    <div class="entry-stat"><span class="label">Range:</span><span class="value">${s.range}</span></div>
+                </div>
+            `).join('');
+            document.getElementById('skillsList').innerHTML = html;
+        }
+        
+        function loadLocations() {
+            const html = Object.values(database.locations).map(l => `
+                <div class="entry">
+                    <div class="entry-title">${l.name}</div>
+                    <div class="entry-stat"><span class="label">Type:</span><span class="value">${l.type}</span></div>
+                    <div class="entry-stat"><span class="label">Description:</span><span class="value">${l.description}</span></div>
+                </div>
+            `).join('');
+            document.getElementById('locationsList').innerHTML = html;
+        }
+        
+        function loadQuests() {
+            const html = Object.values(database.quests).map(q => `
+                <div class="entry" onclick="showQuestDetail('${q.id}')">
+                    <div class="entry-title">${q.name}</div>
+                    <div class="entry-stat"><span class="label">Giver:</span><span class="value">${q.giver}</span></div>
+                    <div class="entry-stat"><span class="label">Level:</span><span class="value">${q.levelRequired}+</span></div>
+                    <div class="entry-stat"><span class="label">Reward:</span><span class="value">${q.reward_zeny} zeny</span></div>
+                </div>
+            `).join('');
+            document.getElementById('questsList').innerHTML = html;
+        }
+        
+        function searchItems() {
+            const query = document.getElementById('itemSearch').value.toLowerCase();
+            const items = Object.values(database.items).filter(i => i.name.toLowerCase().includes(query) || i.id.includes(query));
+            document.getElementById('itemsList').innerHTML = items.map(i => `
+                <div class="entry" onclick="showItemDetail('${i.id}')">
+                    <div class="entry-title">${i.name}</div>
+                    <div class="entry-stat"><span class="label">Type:</span><span class="value">${i.category}</span></div>
+                </div>
+            `).join('') || '<div class="no-results">No items found</div>';
+        }
+        
+        function searchMonsters() {
+            const query = document.getElementById('monsterSearch').value.toLowerCase();
+            const monsters = Object.values(database.monsters).filter(m => m.name.toLowerCase().includes(query));
+            document.getElementById('monstersList').innerHTML = monsters.map(m => `
+                <div class="entry" onclick="showMonsterDetail('${m.id}')">
+                    <div class="entry-title">${m.name} (Lv.${m.level})</div>
+                </div>
+            `).join('') || '<div class="no-results">No monsters found</div>';
+        }
+        
+        function searchJobs() {
+            const query = document.getElementById('jobSearch').value.toLowerCase();
+            const jobs = Object.values(database.jobs).filter(j => j.name.toLowerCase().includes(query));
+            document.getElementById('jobsList').innerHTML = jobs.map(j => `
+                <div class="entry" onclick="showJobDetail('${j.id}')">
+                    <div class="entry-title">${j.name}</div>
+                </div>
+            `).join('') || '<div class="no-results">No jobs found</div>';
+        }
+        
+        function searchSkills() {
+            const query = document.getElementById('skillSearch').value.toLowerCase();
+            const skills = Object.values(database.skills).filter(s => s.name.toLowerCase().includes(query) || s.job.toLowerCase().includes(query));
+            document.getElementById('skillsList').innerHTML = skills.map(s => `
+                <div class="entry" onclick="showSkillDetail('${s.id}')">
+                    <div class="entry-title">${s.name}</div>
+                    <div class="entry-stat"><span class="label">Job:</span><span class="value">${s.job}</span></div>
+                </div>
+            `).join('') || '<div class="no-results">No skills found</div>';
+        }
+        
+        function searchQuests() {
+            const query = document.getElementById('questSearch').value.toLowerCase();
+            const quests = Object.values(database.quests).filter(q => q.name.toLowerCase().includes(query) || q.giver.toLowerCase().includes(query));
+            document.getElementById('questsList').innerHTML = quests.map(q => `
+                <div class="entry" onclick="showQuestDetail('${q.id}')">
+                    <div class="entry-title">${q.name}</div>
+                    <div class="entry-stat"><span class="label">Giver:</span><span class="value">${q.giver}</span></div>
+                </div>
+            `).join('') || '<div class="no-results">No quests found</div>';
+        }
+        
+        function showItemDetail(id) {
+            const item = database.items[id];
+            if (!item) return;
+            alert(`ITEM: ${item.name}\n\nID: ${item.id}\nType: ${item.category}\nWeight: ${item.weight}\nBuy: ${item.buyPrice}\nSell: ${item.sellPrice}\nRarity: ${item.rarity}\n\n${item.description}`);
+        }
+        
+        function showMonsterDetail(id) {
+            const m = database.monsters[id];
+            if (!m) return;
+            alert(`MONSTER: ${m.name}\n\nLevel: ${m.level}\nHP: ${m.hp}\nEXP: ${m.exp}\nElement: ${m.element}\nLocations: ${m.locations.join(', ')}\n\n${m.description}`);
+        }
+        
+        function showJobDetail(id) {
+            const j = database.jobs[id];
+            if (!j) return;
+            alert(`JOB: ${j.name}\n\n${j.description}\n\nBase Stats:\nSTR: ${j.baseStats.str}\nAGI: ${j.baseStats.agi}\nVIT: ${j.baseStats.vit}\nINT: ${j.baseStats.int}\nWIS: ${j.baseStats.wis}\nLCK: ${j.baseStats.lck}`);
+        }
+        
+        function showSkillDetail(id) {
+            const s = database.skills[id];
+            if (!s) return;
+            alert(`SKILL: ${s.name}\n\nJob: ${s.job}\nType: ${s.type}\nMax Level: ${s.maxLevel}\nRange: ${s.range}\nCooldown: ${s.cooldown}s\n\n${s.description}`);
+        }
+        
+        function showQuestDetail(id) {
+            const q = database.quests[id];
+            if (!q) return;
+            alert(`QUEST: ${q.name}\n\nGiver: ${q.giver}\nLocation: ${q.location}\nLevel Required: ${q.levelRequired}\n\nRewards:\nEXP: ${q.reward_exp}\nZeny: ${q.reward_zeny}\n\n${q.description}`);
+        }
+        
+        // Initialize
+        loadItems();
+    </script>
+</body>
+</html>

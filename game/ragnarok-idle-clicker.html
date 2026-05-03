@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ragnarok Idle — Text Clicker RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:#fbbf24; --gold2:#d97706; --gold-glow:rgba(251,191,36,0.35);
+  --red:#ef4444; --red2:#991b1b; --red-glow:rgba(239,68,68,0.3);
+  --blue:#3b82f6; --blue2:#1d4ed8; --blue-glow:rgba(59,130,246,0.3);
+  --green:#22c55e; --green2:#15803d; --green-glow:rgba(34,197,94,0.3);
+  --purple:#a855f7; --purple2:#7e22ce;
+  --bg0:#050709; --bg1:#0a0d14; --bg2:#0f1520; --bg3:#151d2e;
+  --panel:#111827; --panel2:#1f2937;
+  --border:rgba(251,191,36,0.2); --border2:rgba(251,191,36,0.4);
+  --txt:#94a3b8; --txt2:#cbd5e1; --txt3:#f1f5f9;
+  --dim:#334155;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg0);color:var(--txt);font-family:'Share Tech Mono',monospace;overflow:hidden;user-select:none;}
+
+/* SCANLINES */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:9998;}
+
+/* LAYOUT — 3 columns, full height */
+#app{display:grid;grid-template-columns:260px 1fr 280px;height:100vh;gap:0;}
+
+/* ═══════════════════ TOPBAR ═══════════════════ */
+#topbar{
+  grid-column:1/-1;
+  height:48px;
+  background:linear-gradient(90deg,var(--bg2),var(--bg3) 50%,var(--bg2));
+  border-bottom:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1rem;
+  box-shadow:0 2px 16px rgba(0,0,0,0.6);
+  position:relative;z-index:10;
+}
+
+.logo{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:var(--gold);letter-spacing:3px;text-shadow:0 0 20px var(--gold-glow);}
+.logo span{color:var(--txt);font-weight:400;}
+
+.topbar-stats{display:flex;gap:1.2rem;align-items:center;}
+.ts{font-size:10px;color:var(--txt);}
+.ts b{color:var(--gold);}
+.ts .lbl{color:var(--dim);margin-right:3px;}
+
+.top-loc{font-size:10px;padding:3px 10px;border:1px solid var(--border2);background:rgba(251,191,36,0.08);color:var(--gold);letter-spacing:1px;}
+
+/* ═══════════════════ LEFT PANEL ═══════════════════ */
+#left{
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;gap:0;
+  overflow:hidden;
+}
+
+/* CHARACTER CARD */
+.char-card{
+  padding:1rem;
+  background:linear-gradient(160deg,var(--bg2),var(--bg3));
+  border-bottom:1px solid var(--border);
+  text-align:center;
+}
+
+.char-emoji{font-size:42px;line-height:1;margin-bottom:4px;filter:drop-shadow(0 0 8px var(--gold-glow));}
+.char-name{font-family:'Orbitron',sans-serif;font-size:13px;color:var(--gold);letter-spacing:1px;}
+.char-class{font-size:10px;color:var(--txt);margin-top:2px;letter-spacing:1px;}
+
+/* BARS */
+.bars-section{padding:0.8rem 1rem;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+
+.bar-wrap{display:flex;flex-direction:column;gap:2px;}
+.bar-hdr{display:flex;justify-content:space-between;font-size:9px;}
+.bar-hdr .bl{color:var(--dim);letter-spacing:0.5px;}
+.bar-hdr .bv{color:var(--txt2);}
+
+.bar-track{height:8px;background:rgba(0,0,0,0.6);border:1px solid var(--border);border-radius:1px;overflow:hidden;position:relative;}
+.bar-fill{height:100%;border-radius:1px;transition:width 0.3s ease;}
+.bar-fill.hp{background:linear-gradient(90deg,var(--red2),var(--red));}
+.bar-fill.sp{background:linear-gradient(90deg,var(--blue2),var(--blue));}
+.bar-fill.exp{background:linear-gradient(90deg,var(--green2),var(--green));}
+.bar-fill.stg{background:linear-gradient(90deg,var(--purple2),var(--purple));}
+
+/* STATS */
+.stats-section{padding:0.8rem 1rem;border-bottom:1px solid var(--border);}
+.sh{font-size:9px;color:var(--gold2);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px;}
+.sc{display:flex;justify-content:space-between;padding:3px 6px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.04);font-size:10px;}
+.sc .sn{color:var(--dim);}
+.sc .sv{color:var(--gold);}
+.sc.highlight .sv{color:var(--green);text-shadow:0 0 6px var(--green-glow);}
+
+/* EQUIP */
+.equip-section{padding:0.8rem 1rem;border-bottom:1px solid var(--border);}
+.eslot{display:flex;justify-content:space-between;padding:4px 6px;margin-bottom:2px;background:rgba(0,0,0,0.3);border:1px solid rgba(251,191,36,0.1);font-size:10px;cursor:pointer;transition:border-color 0.2s;}
+.eslot:hover{border-color:var(--border2);}
+.eslot .et{color:var(--dim);}
+.eslot .en{color:var(--txt2);}
+.eslot .ea{color:var(--gold);font-size:9px;}
+
+/* ZENY */
+.zeny-box{margin-top:auto;padding:0.8rem 1rem;border-top:1px solid var(--border);text-align:center;}
+.zeny-val{font-family:'Orbitron',sans-serif;font-size:18px;color:var(--gold);text-shadow:0 0 12px var(--gold-glow);}
+.zeny-lbl{font-size:9px;color:var(--dim);letter-spacing:2px;}
+
+/* ═══════════════════ CENTER PANEL ═══════════════════ */
+#center{display:flex;flex-direction:column;background:var(--bg1);}
+
+/* BATTLE ZONE — main arena */
+#arena{
+  flex:1;
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+  cursor:pointer;
+}
+
+/* PARALLAX BG LAYERS */
+#arena-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 60%, rgba(251,191,36,0.04) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+/* STAGE INFO */
+.stage-info{
+  position:absolute;top:12px;left:0;right:0;
+  text-align:center;font-size:10px;color:var(--dim);letter-spacing:2px;
+}
+
+/* ENEMY DISPLAY */
+.enemy-display{
+  text-align:center;
+  position:relative;
+  z-index:2;
+  transition:transform 0.1s;
+}
+
+.enemy-display:active{transform:scale(0.96);}
+
+.enemy-emoji{
+  font-size:80px;line-height:1;
+  display:block;
+  filter:drop-shadow(0 0 20px rgba(239,68,68,0.5));
+  animation:float 3s ease-in-out infinite;
+  transition:all 0.15s;
+}
+
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+
+.enemy-name-big{
+  font-family:'Orbitron',sans-serif;
+  font-size:16px;color:var(--txt3);
+  margin-top:8px;letter-spacing:2px;
+  text-shadow:0 0 10px rgba(239,68,68,0.4);
+}
+
+.enemy-meta{font-size:10px;color:var(--txt);margin-top:4px;letter-spacing:1px;}
+
+/* ENEMY HP BAR in arena */
+.enemy-hp-wrap{
+  width:260px;margin-top:12px;
+}
+
+.enemy-hp-track{
+  height:14px;
+  background:rgba(0,0,0,0.6);
+  border:1px solid rgba(239,68,68,0.5);
+  border-radius:2px;overflow:hidden;
+  position:relative;
+}
+
+.enemy-hp-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--red2),var(--red));
+  transition:width 0.2s ease;
+}
+
+.enemy-hp-txt{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#fff;font-weight:bold;letter-spacing:0.5px;
+  text-shadow:0 1px 2px rgba(0,0,0,0.8);
+}
+
+/* CLICK DAMAGE FLOATERS */
+.dmg-float{
+  position:absolute;
+  font-family:'Orbitron',sans-serif;
+  font-size:20px;font-weight:900;
+  color:var(--gold);
+  text-shadow:0 0 10px var(--gold-glow);
+  pointer-events:none;
+  z-index:100;
+  animation:floatUp 0.8s ease forwards;
+}
+
+.dmg-float.crit{color:var(--red);font-size:26px;text-shadow:0 0 14px var(--red-glow);}
+.dmg-float.auto{color:var(--blue);font-size:14px;}
+.dmg-float.exp{color:var(--green);font-size:13px;}
+.dmg-float.heal{color:#86efac;font-size:14px;}
+
+@keyframes floatUp{
+  0%  {opacity:1;transform:translateY(0) scale(1);}
+  100%{opacity:0;transform:translateY(-70px) scale(0.7);}
+}
+
+/* DEAD FLASH */
+@keyframes deadFlash{0%,100%{filter:none;}50%{filter:brightness(3) saturate(0);}}
+.enemy-dead{animation:deadFlash 0.3s ease 2;}
+
+/* CLICK HINT */
+.click-hint{
+  position:absolute;bottom:16px;
+  font-size:10px;color:var(--dim);letter-spacing:2px;
+  animation:blink 2s infinite;
+}
+
+@keyframes blink{0%,100%{opacity:0.4;}50%{opacity:1;}}
+
+/* WAVE BANNER */
+.wave-banner{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Orbitron',sans-serif;font-size:22px;color:var(--gold);
+  text-shadow:0 0 30px var(--gold-glow);
+  letter-spacing:4px;
+  opacity:0;pointer-events:none;
+  z-index:50;
+}
+
+.wave-banner.show{animation:bannerPop 1.5s ease forwards;}
+@keyframes bannerPop{0%{opacity:0;transform:translate(-50%,-50%) scale(0.5);}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1);}70%{opacity:1;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.2);}}
+
+/* ─── BATTLE LOG ─── */
+#battleLog{
+  height:120px;
+  background:rgba(0,0,0,0.4);
+  border-top:1px solid var(--border);
+  overflow-y:auto;
+  padding:6px 10px;
+  display:flex;flex-direction:column;gap:2px;
+}
+
+.blog{font-size:10px;line-height:1.4;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.blog.atk{color:#fca5a5;}
+.blog.def{color:#93c5fd;}
+.blog.ev{color:var(--green);}
+.blog.loot{color:var(--gold);}
+.blog.sys{color:var(--dim);}
+.blog.lvl{color:var(--purple);font-weight:bold;}
+.blog.heal{color:#86efac;}
+.blog .ts{color:var(--dim);font-size:9px;margin-right:4px;}
+
+/* ─── BOTTOM INPUT ─── */
+#cmdBar{
+  height:44px;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:6px;
+  padding:0 10px;
+}
+
+#cmdIn{
+  flex:1;height:28px;padding:0 10px;
+  background:rgba(0,0,0,0.5);
+  border:1px solid var(--border);color:var(--txt3);
+  font-family:'Share Tech Mono',monospace;font-size:11px;outline:none;
+}
+
+#cmdIn:focus{border-color:var(--border2);}
+#cmdIn::placeholder{color:var(--dim);}
+
+.cmd-send{
+  height:28px;padding:0 14px;
+  background:rgba(251,191,36,0.15);border:1px solid var(--border2);
+  color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:10px;
+  cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;
+}
+
+.cmd-send:hover{background:rgba(251,191,36,0.25);}
+
+/* ═══════════════════ RIGHT PANEL ═══════════════════ */
+#right{
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+/* TABS */
+.tabs{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+
+.tab{
+  padding:10px 4px;text-align:center;font-size:9px;color:var(--dim);
+  letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;
+  border-right:1px solid var(--border);transition:all 0.2s;
+}
+
+.tab:last-child{border-right:none;}
+.tab:hover{color:var(--txt2);background:rgba(251,191,36,0.05);}
+.tab.active{color:var(--gold);background:rgba(251,191,36,0.1);border-bottom:2px solid var(--gold);}
+
+.tab-body{flex:1;overflow-y:auto;padding:8px;}
+
+/* ─ SKILLS TAB ─ */
+.skill-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 8px;margin-bottom:3px;
+  background:rgba(0,0,0,0.35);border:1px solid rgba(168,85,247,0.2);
+  cursor:pointer;transition:all 0.2s;
+}
+
+.skill-row:hover{border-color:var(--purple);background:rgba(168,85,247,0.1);}
+.skill-row.on-cd{opacity:0.5;cursor:not-allowed;}
+
+.sk-left .sk-name{font-size:11px;color:#d8b4fe;}
+.sk-left .sk-desc{font-size:9px;color:var(--dim);margin-top:1px;}
+.sk-right{text-align:right;}
+.sk-right .sk-sp{font-size:10px;color:var(--blue);}
+.sk-right .sk-cd{font-size:9px;color:var(--dim);}
+
+/* ─ INVENTORY TAB ─ */
+.inv-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 8px;margin-bottom:2px;
+  background:rgba(0,0,0,0.3);border:1px solid rgba(251,191,36,0.1);
+  cursor:pointer;transition:all 0.2s;font-size:10px;
+}
+
+.inv-row:hover{border-color:var(--border2);background:rgba(251,191,36,0.06);}
+.inv-row .in{color:var(--txt2);}
+.inv-row .iq{color:var(--gold);}
+.inv-row .ic{color:var(--dim);font-size:9px;}
+
+.use-tag{font-size:8px;padding:1px 5px;border:1px solid var(--green);color:var(--green);margin-left:4px;}
+
+/* ─ MAP TAB ─ */
+.map-area{display:flex;flex-direction:column;gap:4px;}
+.zone-card{
+  padding:8px;border:1px solid var(--border);background:rgba(0,0,0,0.3);
+  cursor:pointer;transition:all 0.2s;
+}
+
+.zone-card:hover{border-color:var(--border2);background:rgba(251,191,36,0.05);}
+.zone-card.active-zone{border-color:var(--green);background:rgba(34,197,94,0.08);}
+.zone-card.locked{opacity:0.35;cursor:not-allowed;}
+
+.zn{font-size:11px;color:var(--txt2);margin-bottom:2px;}
+.zn.active-zone{color:var(--green);}
+.zm{font-size:9px;color:var(--dim);}
+.zr{font-size:9px;color:var(--gold);}
+
+.zone-badge{font-size:8px;padding:1px 5px;border:1px solid var(--green);color:var(--green);float:right;}
+.zone-badge.locked{border-color:var(--dim);color:var(--dim);}
+
+/* ─ UPGRADES TAB ─ */
+.upg-card{
+  padding:8px;margin-bottom:4px;
+  background:rgba(0,0,0,0.35);border:1px solid rgba(251,191,36,0.15);
+  cursor:pointer;transition:all 0.2s;
+}
+
+.upg-card:hover{border-color:var(--border2);}
+.upg-card.can-buy{border-color:rgba(34,197,94,0.4);}
+.upg-card.maxed{opacity:0.4;cursor:not-allowed;}
+.upg-card .un{font-size:11px;color:var(--txt2);}
+.upg-card .ud{font-size:9px;color:var(--dim);margin-top:1px;}
+.upg-card .ub{font-size:11px;color:var(--gold);margin-top:4px;}
+.upg-card .ul{font-size:9px;color:var(--dim);}
+
+/* ─ AUTO DPS INDICATOR ─ */
+.dps-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:4px 10px;
+  background:rgba(59,130,246,0.08);
+  border-top:1px solid rgba(59,130,246,0.2);
+  font-size:9px;color:var(--blue);letter-spacing:0.5px;
+}
+
+/* NOTIFICATION TOAST */
+#toast{
+  position:fixed;bottom:60px;left:50%;transform:translateX(-50%);
+  background:rgba(15,21,32,0.95);border:1px solid var(--border2);
+  padding:8px 18px;font-size:11px;color:var(--gold);letter-spacing:1px;
+  opacity:0;pointer-events:none;z-index:9999;
+  transition:opacity 0.3s;
+}
+
+/* TITLE SCREEN */
+#title{
+  position:fixed;inset:0;background:var(--bg0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1.5rem;z-index:9999;
+}
+
+.title-logo{
+  font-family:'Orbitron',sans-serif;font-size:42px;font-weight:900;
+  color:var(--gold);text-shadow:0 0 40px var(--gold-glow),0 0 80px rgba(251,191,36,0.15);
+  letter-spacing:6px;text-align:center;
+}
+
+.title-sub{
+  font-size:11px;color:var(--dim);letter-spacing:4px;text-transform:uppercase;text-align:center;
+}
+
+.form-box{display:flex;flex-direction:column;gap:10px;width:320px;}
+.form-lbl{font-size:10px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;}
+
+.form-inp, .form-sel{
+  width:100%;padding:9px 12px;
+  background:rgba(0,0,0,0.6);border:1px solid var(--border2);
+  color:var(--txt3);font-family:'Share Tech Mono',monospace;font-size:12px;outline:none;
+}
+
+.form-inp:focus,.form-sel:focus{border-color:var(--gold);}
+.form-sel option{background:var(--bg2);}
+
+.start-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(90deg,rgba(251,191,36,0.15),rgba(251,191,36,0.3));
+  border:1px solid var(--gold);color:var(--gold);
+  font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;letter-spacing:4px;text-transform:uppercase;
+  transition:all 0.3s;margin-top:6px;
+}
+
+.start-btn:hover{background:rgba(251,191,36,0.3);box-shadow:0 0 24px var(--gold-glow);}
+
+.class-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.class-opt{
+  padding:8px;border:1px solid var(--border);background:rgba(0,0,0,0.4);
+  cursor:pointer;transition:all 0.2s;text-align:center;
+}
+
+.class-opt:hover,.class-opt.sel{border-color:var(--gold);background:rgba(251,191,36,0.1);}
+.class-opt .ce{font-size:22px;display:block;margin-bottom:4px;}
+.class-opt .cn{font-size:10px;color:var(--txt2);}
+.class-opt .cd{font-size:8px;color:var(--dim);margin-top:2px;}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:rgba(0,0,0,0.3);}
+::-webkit-scrollbar-thumb{background:rgba(251,191,36,0.3);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     TITLE SCREEN
+══════════════════════════════════════════════════════════ -->
+<div id="title">
+  <div>
+    <div class="title-logo">RAGNAROK</div>
+    <div class="title-logo" style="font-size:20px;color:var(--txt);margin-top:4px;text-shadow:none;">IDLE CHRONICLES</div>
+    <div class="title-sub" style="margin-top:8px;">Clicker · Auto-Battle · Text RPG</div>
+  </div>
+
+  <div class="form-box">
+    <div>
+      <div class="form-lbl" style="margin-bottom:6px;">Character Name</div>
+      <input class="form-inp" id="iName" placeholder="Enter name..." maxlength="18">
+    </div>
+
+    <div>
+      <div class="form-lbl" style="margin-bottom:6px;">Choose Class</div>
+      <div class="class-grid" id="classGrid">
+        <div class="class-opt sel" data-job="Swordsman"><span class="ce">⚔️</span><span class="cn">Swordsman</span><span class="cd">STR · VIT · Tank</span></div>
+        <div class="class-opt" data-job="Mage"><span class="ce">🔮</span><span class="cn">Mage</span><span class="cd">INT · AoE · Burst</span></div>
+        <div class="class-opt" data-job="Archer"><span class="ce">🏹</span><span class="cn">Archer</span><span class="cd">AGI · Ranged · Fast</span></div>
+        <div class="class-opt" data-job="Acolyte"><span class="ce">✨</span><span class="cn">Acolyte</span><span class="cd">WIS · Heal · Support</span></div>
+        <div class="class-opt" data-job="Thief"><span class="ce">🗡️</span><span class="cn">Thief</span><span class="cd">AGI · LCK · Crit</span></div>
+        <div class="class-opt" data-job="Novice"><span class="ce">🧍</span><span class="cn">Novice</span><span class="cd">Balanced · Starter</span></div>
+      </div>
+    </div>
+
+    <button class="start-btn" onclick="startGame()">▶ BEGIN ADVENTURE</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     GAME UI
+══════════════════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <!-- TOPBAR -->
+  <div id="topbar" style="grid-column:1/-1">
+    <div class="logo">RAGNAROK <span>IDLE</span></div>
+    <div class="topbar-stats">
+      <div class="ts"><span class="lbl">LV</span><b id="tLv">1</b></div>
+      <div class="ts"><span class="lbl">HP</span><b id="tHp">100</b></div>
+      <div class="ts"><span class="lbl">DPS</span><b id="tDps" style="color:var(--blue)">0</b></div>
+      <div class="ts"><span class="lbl">KILLS</span><b id="tKills">0</b></div>
+      <div class="ts"><span class="lbl">WAVE</span><b id="tWave">1</b></div>
+    </div>
+    <div class="top-loc" id="tLoc">PRONTERA FIELD</div>
+  </div>
+
+  <!-- LEFT PANEL -->
+  <div id="left">
+    <div class="char-card">
+      <div class="char-emoji" id="cEmoji">⚔️</div>
+      <div class="char-name" id="cName">—</div>
+      <div class="char-class" id="cClass">—</div>
+    </div>
+
+    <div class="bars-section">
+      <div class="bar-wrap">
+        <div class="bar-hdr"><span class="bl">HP</span><span class="bv"><span id="bHpV">100</span>/<span id="bHpM">100</span></span></div>
+        <div class="bar-track"><div class="bar-fill hp" id="bHp" style="width:100%"></div></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-hdr"><span class="bl">SP</span><span class="bv"><span id="bSpV">50</span>/<span id="bSpM">50</span></span></div>
+        <div class="bar-track"><div class="bar-fill sp" id="bSp" style="width:100%"></div></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-hdr"><span class="bl">EXP</span><span class="bv"><span id="bExpV">0</span>/<span id="bExpM">100</span></span></div>
+        <div class="bar-track"><div class="bar-fill exp" id="bExp" style="width:0%"></div></div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-hdr"><span class="bl">STAGE</span><span class="bv">Wave <span id="bWave">1</span></span></div>
+        <div class="bar-track"><div class="bar-fill stg" id="bStg" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <div class="sh">Stats</div>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+
+    <div class="equip-section">
+      <div class="sh">Equipment</div>
+      <div class="eslot"><span class="et">WPN</span><span class="en" id="eWpn">Unarmed</span><span class="ea" id="eWpnA"></span></div>
+      <div class="eslot"><span class="et">ARM</span><span class="en" id="eArm">None</span><span class="ea" id="eArmA"></span></div>
+      <div class="eslot"><span class="et">ACC</span><span class="en" id="eAcc">—</span><span class="ea"></span></div>
+    </div>
+
+    <div class="zeny-box">
+      <div class="zeny-lbl">ZENY</div>
+      <div class="zeny-val" id="zenyVal">0</div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div id="center">
+    <div id="arena" onclick="clickAttack(event)">
+      <div id="arena-bg"></div>
+      <div class="stage-info" id="stageInfo">PRONTERA FIELD — WAVE 1</div>
+
+      <div class="enemy-display" id="enemyDisplay">
+        <span class="enemy-emoji" id="eEmoji">🟣</span>
+        <div class="enemy-name-big" id="eName">Poring</div>
+        <div class="enemy-meta" id="eMeta">Lv.1 · Water · Small</div>
+        <div class="enemy-hp-wrap">
+          <div class="enemy-hp-track">
+            <div class="enemy-hp-fill" id="eHpFill" style="width:100%"></div>
+            <div class="enemy-hp-txt" id="eHpTxt">10 / 10</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wave-banner" id="waveBanner">WAVE CLEAR!</div>
+      <div class="click-hint" id="clickHint">[ TAP TO ATTACK ]</div>
+    </div>
+
+    <div class="dps-bar">
+      <span>AUTO DPS: <b id="dpsVal" style="color:var(--blue)">0</b>/s</span>
+      <span id="autoStatus" style="color:var(--green)">● AUTO ON</span>
+      <span>REGEN: <b style="color:var(--green)">+<span id="regenVal">1</span> HP/s</b></span>
+    </div>
+
+    <div id="battleLog"></div>
+
+    <div id="cmdBar">
+      <input class="form-inp" style="flex:1;height:28px;padding:0 10px;font-size:11px;" id="cmdIn" placeholder="Command (use potion / go to geffen / equip sword)..." autocomplete="off">
+      <button class="cmd-send" onclick="sendCmd()">GO</button>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('skills')">Skills</div>
+      <div class="tab" onclick="showTab('inv')">Items</div>
+      <div class="tab" onclick="showTab('map')">Map</div>
+      <div class="tab" onclick="showTab('upg')">Upgrades</div>
+    </div>
+
+    <div class="tab-body" id="tabBody"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATABASE
+// ══════════════════════════════════════════════════════════
+const DB = {
+  jobs:{
+    Novice:   {e:"🧍",hp:80,sp:40,stats:{str:2,agi:2,vit:2,int:2,wis:2,lck:2},skills:["Slash"],wpn:"100",arm:"200",atk:8,matk:5},
+    Swordsman:{e:"⚔️",hp:120,sp:35,stats:{str:5,agi:2,vit:4,int:1,wis:2,lck:1},skills:["Bash","Provoke"],wpn:"101",arm:"201",atk:18,matk:4},
+    Mage:     {e:"🔮",hp:60,sp:100,stats:{str:1,agi:1,vit:1,int:6,wis:4,lck:1},skills:["Fire Bolt","Cold Bolt"],wpn:"120",arm:"200",atk:5,matk:22},
+    Archer:   {e:"🏹",hp:80,sp:55,stats:{str:2,agi:6,vit:1,int:1,wis:2,lck:3},skills:["Arrow Shower","Snipe"],wpn:"130",arm:"200",atk:14,matk:5},
+    Acolyte:  {e:"✨",hp:85,sp:90,stats:{str:1,agi:2,vit:3,int:2,wis:6,lck:1},skills:["Heal","Blessing"],wpn:"120",arm:"200",atk:7,matk:10},
+    Thief:    {e:"🗡️",hp:85,sp:50,stats:{str:2,agi:6,vit:1,int:1,wis:1,lck:5},skills:["Steal","Backstab"],wpn:"110",arm:"200",atk:12,matk:4},
+  },
+  items:{
+    "100":{name:"Short Sword",   cat:"Weapon",  atk:24,  buy:500,  sell:150},
+    "101":{name:"Broadsword",    cat:"Weapon",  atk:48,  buy:2000, sell:600},
+    "102":{name:"Claymore",      cat:"Weapon",  atk:95,  buy:5000, sell:1500},
+    "110":{name:"Dagger",        cat:"Weapon",  atk:15,  buy:300,  sell:90},
+    "120":{name:"Staff",         cat:"Weapon",  atk:8,   matk:20, buy:600,  sell:180},
+    "130":{name:"Short Bow",     cat:"Weapon",  atk:20,  buy:700,  sell:210},
+    "200":{name:"Coat",          cat:"Armor",   def:6,   buy:400,  sell:120},
+    "201":{name:"Leather Armor", cat:"Armor",   def:12,  buy:1200, sell:360},
+    "202":{name:"Plate Armor",   cat:"Armor",   def:22,  buy:3500, sell:1050},
+    "400":{name:"Red Potion",    cat:"Consumable",effect:"healHP",val:45,  buy:50,  sell:15},
+    "401":{name:"Yellow Potion", cat:"Consumable",effect:"healHP",val:150, buy:100, sell:30},
+    "402":{name:"Blue Potion",   cat:"Consumable",effect:"healSP",val:40,  buy:100, sell:30},
+    "403":{name:"White Potion",  cat:"Consumable",effect:"healBoth",val:200,val2:100,buy:1500,sell:450},
+    "001":{name:"Phracon",       cat:"Material",buy:2500,sell:750},
+    "002":{name:"Elunium",       cat:"Material",buy:8000,sell:2400},
+    "003":{name:"Oridecon",      cat:"Material",buy:8000,sell:2400},
+    "005":{name:"Iron Ore",      cat:"Material",buy:1000,sell:300},
+  },
+  monsters:{
+    // PRONTERA FIELD
+    "1001":{name:"Poring",     e:"🟣",lv:1, hp:10, atk:3, exp:3, jexp:4, zeny:[50,120],   el:"Water",   drops:[{id:"001",r:70},{id:"400",r:25}]},
+    "1002":{name:"Lunatic",    e:"🐰",lv:2, hp:15, atk:5, exp:5, jexp:7, zeny:[80,200],   el:"Wind",    drops:[{id:"001",r:60}]},
+    "1003":{name:"Chonchon",   e:"🐝",lv:3, hp:18, atk:6, exp:8, jexp:10,zeny:[100,240],  el:"Wind",    drops:[{id:"005",r:50}]},
+    "1004":{name:"Rocker",     e:"🪨",lv:5, hp:30, atk:10,exp:15,jexp:18,zeny:[200,480],  el:"Earth",   drops:[{id:"002",r:35}]},
+    // PAYON FIELD
+    "1005":{name:"Creamy",     e:"🦋",lv:6, hp:35, atk:12,exp:18,jexp:22,zeny:[250,560],  el:"Fire",    drops:[{id:"002",r:40}]},
+    "1006":{name:"Thief Bug",  e:"🐛",lv:7, hp:40, atk:14,exp:22,jexp:26,zeny:[300,650],  el:"Earth",   drops:[{id:"001",r:45}]},
+    "1007":{name:"Wolf",       e:"🐺",lv:8, hp:48, atk:16,exp:28,jexp:34,zeny:[350,800],  el:"Neutral", drops:[{id:"005",r:55}]},
+    // GEFFEN FIELD
+    "1008":{name:"Poison Spore",e:"🍄",lv:10,hp:60,atk:20,exp:40,jexp:50,zeny:[500,1100], el:"Poison",  drops:[{id:"002",r:45}]},
+    "1009":{name:"Hornet",     e:"🐞",lv:12,hp:68, atk:22,exp:48,jexp:60,zeny:[600,1300], el:"Wind",    drops:[{id:"005",r:60}]},
+    // GEFFEN DUNGEON
+    "1010":{name:"Archer Skeleton",e:"💀",lv:15,hp:90,atk:28,exp:70,jexp:90,zeny:[900,2000],el:"Undead", drops:[{id:"003",r:50},{id:"402",r:20}]},
+    "1011":{name:"Zombie",     e:"🧟",lv:16,hp:100,atk:30,exp:78,jexp:100,zeny:[1000,2200],el:"Undead",  drops:[{id:"001",r:60}]},
+    // SPHINX
+    "1012":{name:"Mummy",      e:"⚱️", lv:20,hp:130,atk:38,exp:110,jexp:140,zeny:[1400,3000],el:"Undead",drops:[{id:"003",r:60},{id:"403",r:10}]},
+    "1013":{name:"Anubis",     e:"🐾",lv:25,hp:180,atk:50,exp:160,jexp:200,zeny:[2000,4500],el:"Dark",   drops:[{id:"003",r:70},{id:"403",r:20}]},
+  },
+  zones:[
+    {id:"prontera",name:"Prontera Field", lv:1,  monsters:["1001","1002","1003","1004"], waveMax:10, expMult:1.0,  zenyMult:1.0,  desc:"Beginner-friendly fields"},
+    {id:"payon",   name:"Payon Forest",   lv:5,  monsters:["1005","1006","1007"],        waveMax:10, expMult:1.4,  zenyMult:1.3,  desc:"Dark forest paths"},
+    {id:"geffen",  name:"Geffen Field",   lv:10, monsters:["1008","1009"],               waveMax:10, expMult:1.8,  zenyMult:1.6,  desc:"Misty magical plains"},
+    {id:"geffenD", name:"Geffen Dungeon", lv:15, monsters:["1010","1011"],               waveMax:10, expMult:2.5,  zenyMult:2.2,  desc:"Undead-infested caverns"},
+    {id:"sphinx",  name:"Sphinx Dungeon", lv:20, monsters:["1012","1013"],               waveMax:10, expMult:3.5,  zenyMult:3.0,  desc:"Ancient undead sanctum"},
+  ],
+  skills:{
+    "Slash":       {sp:0,  cd:0,   dmg:1.0,  type:"phys",  desc:"Basic attack",          color:"var(--txt2)"},
+    "Bash":        {sp:4,  cd:3,   dmg:1.8,  type:"phys",  desc:"Powerful blow",         color:"#fca5a5"},
+    "Provoke":     {sp:2,  cd:8,   dmg:0,    type:"debuff",desc:"Raises enemy ATK −20%", color:"#fbbf24"},
+    "Fire Bolt":   {sp:12, cd:4,   dmg:2.2,  type:"magic", desc:"Fire damage burst",     color:"#f97316"},
+    "Cold Bolt":   {sp:12, cd:4,   dmg:2.0,  type:"magic", desc:"Ice bolt, slows",       color:"#93c5fd"},
+    "Arrow Shower":{sp:15, cd:5,   dmg:1.6,  type:"phys",  desc:"Multi-hit rain",        color:"#a3e635"},
+    "Snipe":       {sp:10, cd:6,   dmg:2.5,  type:"phys",  desc:"Piercing single shot",  color:"#facc15"},
+    "Heal":        {sp:14, cd:3,   dmg:0,    type:"heal",  heal:80, desc:"Restores HP",  color:"#86efac"},
+    "Blessing":    {sp:20, cd:30,  dmg:0,    type:"buff",  desc:"+20% stats 30s",        color:"#d8b4fe"},
+    "Steal":       {sp:5,  cd:8,   dmg:0,    type:"special",desc:"Steal item from foe",  color:"#fbbf24"},
+    "Backstab":    {sp:8,  cd:5,   dmg:2.8,  type:"phys",  desc:"Shadow strike",         color:"#e879f9"},
+  },
+  upgrades:[
+    {id:"atk1",    name:"Sharpen Blade",   desc:"+5 base ATK",      cost:500,   maxLv:10, effect:"atk",   val:5},
+    {id:"hp1",     name:"Iron Body",       desc:"+20 max HP",        cost:400,   maxLv:10, effect:"hp",    val:20},
+    {id:"sp1",     name:"Mana Expansion",  desc:"+15 max SP",        cost:350,   maxLv:10, effect:"sp",    val:15},
+    {id:"crit1",   name:"Critical Eye",    desc:"+3% crit chance",   cost:600,   maxLv:5,  effect:"crit",  val:0.03},
+    {id:"regen1",  name:"Natural Recovery",desc:"+1 HP regen/s",     cost:800,   maxLv:5,  effect:"regen", val:1},
+    {id:"dps1",    name:"Auto-Attack Lv",  desc:"+10% auto DPS",     cost:1000,  maxLv:10, effect:"dps",   val:0.10},
+    {id:"exp1",    name:"Study",           desc:"+10% EXP gain",     cost:700,   maxLv:5,  effect:"exp",   val:0.10},
+    {id:"zeny1",   name:"Merchant's Eye",  desc:"+10% Zeny drops",   cost:750,   maxLv:5,  effect:"zeny",  val:0.10},
+  ]
+};
+
+// ══════════════════════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════════════════════
+let G = {};
+let skillCDs = {};
+let blessedTimer = 0;
+let currentTab = "skills";
+let autoInterval, tickInterval, regenInterval;
+let logLines = [];
+
+function startGame(){
+  const name = document.getElementById("iName").value.trim() || "Adventurer";
+  const job  = document.querySelector(".class-opt.sel")?.dataset.job || "Swordsman";
+  const jd   = DB.jobs[job];
+
+  G = {
+    name, job,
+    level:1, exp:0, expMax:100,
+    hp:jd.hp, maxHp:jd.hp,
+    sp:jd.sp, maxSp:jd.sp,
+    stats:{...jd.stats},
+    baseAtk: jd.atk, baseMatk: jd.matk,
+    atk: jd.atk, matk: jd.matk,
+    zeny:0,
+    zone: DB.zones[0],
+    wave:1, waveKills:0, waveGoal:5,
+    enemy:null, enemyHp:0, enemyMaxHp:0,
+    inventory:[
+      {id:"400",qty:5},{id:"402",qty:3}
+    ],
+    equip:{wpn:jd.wpn, arm:jd.arm, acc:null},
+    skills:[...jd.skills],
+    upgrades:{},
+    kills:0,
+    critChance: 0.05 + (jd.stats.lck||0)*0.01,
+    hpRegen:1,
+    dpsBonus:0,
+    expBonus:0,
+    zenyBonus:0,
+  };
+
+  applyEquipStats();
+  spawnEnemy();
+
+  document.getElementById("title").style.display="none";
+  document.getElementById("app").style.display="grid";
+
+  showTab("skills");
+  renderAll();
+  blog("sys","Welcome, "+G.name+" the "+G.job+"! Battle begins in "+G.zone.name+".");
+  blog("sys","Click the enemy to attack! Auto-battle is always active.");
+
+  // TICK — auto combat + EXP every second
+  autoInterval = setInterval(autoTick, 1000);
+  // SP regen
+  regenInterval = setInterval(()=>{
+    if(G.sp < G.maxSp){ G.sp = Math.min(G.maxSp, G.sp + 2); }
+    // HP regen out of danger? No — always regen slowly
+    if(G.hp < G.maxHp){ G.hp = Math.min(G.maxHp, G.hp + G.hpRegen); }
+    renderBars();
+  }, 1000);
+}
+
+// ══════════════════════════════════════════════════════════
+// AUTO TICK — runs every second
+// ══════════════════════════════════════════════════════════
+function autoTick(){
+  if(!G.enemy) return;
+
+  // Compute total auto DPS
+  const autoDmg = Math.max(1, Math.floor(computeAtk() * (0.7 + G.dpsBonus)));
+  dealDmg(autoDmg, "auto");
+
+  // Enemy attacks player
+  if(G.enemy && G.enemyHp > 0){
+    const em = DB.monsters[G.enemy];
+    const def = computeDef();
+    const eDmg = Math.max(1, Math.floor(em.atk * (0.8+Math.random()*0.4) - def*0.3));
+    G.hp = Math.max(0, G.hp - eDmg);
+    if(G.hp <= 0) playerDied();
+  }
+
+  // Update DPS display
+  document.getElementById("dpsVal").textContent = Math.floor(computeAtk()*(0.7+G.dpsBonus));
+  renderBars();
+  renderTopbar();
+}
+
+// ══════════════════════════════════════════════════════════
+// CLICK ATTACK
+// ══════════════════════════════════════════════════════════
+function clickAttack(evt){
+  if(!G.enemy) return;
+
+  const isCrit = Math.random() < G.critChance;
+  let dmg = Math.floor(computeAtk() * (isCrit ? 2.2 : 1) * (0.9+Math.random()*0.2));
+  if(isCrit) dmg = Math.floor(dmg);
+
+  // Spawn float
+  spawnFloat(evt.clientX, evt.clientY, (isCrit?"💥 ":"") + dmg, isCrit?"crit":"");
+  dealDmg(dmg, "click", isCrit);
+}
+
+function dealDmg(dmg, src, isCrit){
+  if(!G.enemy) return;
+  G.enemyHp -= dmg;
+
+  if(src==="click"){
+    if(isCrit) blog("atk","💥 CRITICAL HIT! You dealt "+dmg+" damage to "+DB.monsters[G.enemy].name+"!");
+  }
+
+  updateEnemyBar();
+
+  if(G.enemyHp <= 0) killEnemy();
+}
+
+// ══════════════════════════════════════════════════════════
+// SPAWN / KILL ENEMY
+// ══════════════════════════════════════════════════════════
+function spawnEnemy(){
+  const zone = G.zone;
+  const pool = zone.monsters;
+  const mid  = pool[Math.floor(Math.random()*pool.length)];
+  const em   = DB.monsters[mid];
+
+  G.enemy      = mid;
+  G.enemyMaxHp = Math.floor(em.hp * (1 + G.level * 0.15));
+  G.enemyHp    = G.enemyMaxHp;
+
+  document.getElementById("eEmoji").textContent = em.e;
+  document.getElementById("eName").textContent  = em.name;
+  document.getElementById("eMeta").textContent  = `Lv.${em.lv} · ${em.el} · Wave ${G.wave}/${G.waveGoal}`;
+  document.getElementById("eHpFill").style.width = "100%";
+  document.getElementById("eHpTxt").textContent  = G.enemyMaxHp+" / "+G.enemyMaxHp;
+
+  // un-dead the enemy display
+  document.getElementById("enemyDisplay").classList.remove("enemy-dead");
+  document.getElementById("clickHint").style.display = "block";
+}
+
+function killEnemy(){
+  const em = DB.monsters[G.enemy];
+  G.kills++;
+  G.waveKills++;
+
+  // EXP
+  const expGain = Math.floor(em.exp * G.zone.expMult * (1 + G.expBonus));
+  gainExp(expGain);
+
+  // Zeny
+  const zGain = Math.floor((em.zeny[0]+Math.random()*(em.zeny[1]-em.zeny[0])) * G.zone.zenyMult * (1+G.zenyBonus));
+  G.zeny += zGain;
+
+  blog("ev","⚔ "+em.name+" defeated! +"+expGain+" EXP  +"+zGain+" z");
+
+  // Drops
+  for(const d of em.drops){
+    if(Math.random()*100 < d.r){
+      addItem(d.id, 1);
+      blog("loot","💎 Dropped: "+DB.items[d.id].name);
+    }
+  }
+
+  // Death animation
+  document.getElementById("enemyDisplay").classList.add("enemy-dead");
+
+  // Wave progress
+  renderWaveBar();
+
+  if(G.waveKills >= G.waveGoal){
+    advanceWave();
+  } else {
+    setTimeout(spawnEnemy, 600);
+  }
+
+  renderAll();
+}
+
+function advanceWave(){
+  G.wave++;
+  G.waveKills = 0;
+  G.waveGoal  = 5 + Math.floor(G.wave/3);
+
+  // Stage clear
+  const banner = document.getElementById("waveBanner");
+  banner.textContent = "WAVE "+(G.wave-1)+" CLEAR!";
+  banner.classList.add("show");
+  setTimeout(()=>banner.classList.remove("show"), 1600);
+
+  // Boss wave every 10
+  if(G.wave % 10 === 0){
+    blog("sys","⚠ BOSS WAVE "+G.wave+"! Stronger enemy approaches!");
+  }
+
+  document.getElementById("stageInfo").textContent = G.zone.name.toUpperCase()+" — WAVE "+G.wave;
+  setTimeout(spawnEnemy, 1200);
+}
+
+function playerDied(){
+  blog("sys","💀 You were defeated! HP restored — continuing...");
+  G.hp = Math.floor(G.maxHp * 0.4);
+  // Small exp penalty
+  G.exp = Math.max(0, G.exp - 10);
+  setTimeout(spawnEnemy, 1000);
+}
+
+// ══════════════════════════════════════════════════════════
+// EXP & LEVELING
+// ══════════════════════════════════════════════════════════
+function gainExp(amount){
+  G.exp += amount;
+  while(G.exp >= G.expMax){
+    G.exp -= G.expMax;
+    G.level++;
+    G.expMax = Math.floor(G.expMax * 1.55 + G.level * 20);
+
+    // Level-up bonuses
+    G.maxHp  += 8 + G.stats.vit * 2;
+    G.maxSp  += 4 + G.stats.wis;
+    G.hp      = G.maxHp;
+    G.sp      = G.maxSp;
+    // Tiny stat boost every 3 levels
+    if(G.level % 3 === 0){
+      const sk = Object.keys(G.stats);
+      G.stats[sk[G.level % sk.length]]++;
+    }
+    recomputeAtk();
+
+    blog("lvl","★ LEVEL UP! You are now Lv."+G.level+"! HP & SP fully restored!");
+    spawnFloat(window.innerWidth/2, window.innerHeight/2, "LEVEL UP!", "exp");
+    showToast("LEVEL UP! Now Lv."+G.level);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// COMBAT MATH
+// ══════════════════════════════════════════════════════════
+function computeAtk(){
+  const wpn = G.equip.wpn ? (DB.items[G.equip.wpn]?.atk||0) : 0;
+  return Math.floor((G.stats.str * 3 + wpn + G.level * 1.5) * (blessedTimer>0?1.2:1));
+}
+
+function computeMatk(){
+  const wpn = G.equip.wpn ? (DB.items[G.equip.wpn]?.matk||0) : 0;
+  return Math.floor((G.stats.int * 4 + wpn + G.level * 1.2) * (blessedTimer>0?1.2:1));
+}
+
+function computeDef(){
+  const arm = G.equip.arm ? (DB.items[G.equip.arm]?.def||0) : 0;
+  return arm + G.stats.vit * 0.5;
+}
+
+function recomputeAtk(){
+  G.atk  = computeAtk();
+  G.matk = computeMatk();
+}
+
+function applyEquipStats(){ recomputeAtk(); }
+
+// ══════════════════════════════════════════════════════════
+// SKILLS
+// ══════════════════════════════════════════════════════════
+function useSkill(skName){
+  const sd = DB.skills[skName];
+  if(!sd) return;
+  if(G.sp < sd.sp){ showToast("Not enough SP!"); return; }
+  if(skillCDs[skName] > 0){ showToast(skName+" on cooldown: "+skillCDs[skName]+"s"); return; }
+
+  G.sp -= sd.sp;
+  skillCDs[skName] = sd.cd;
+
+  if(sd.cd > 0){
+    const cdTimer = setInterval(()=>{
+      skillCDs[skName]--;
+      if(skillCDs[skName] <= 0){ clearInterval(cdTimer); skillCDs[skName]=0; }
+      renderSkillsTab();
+    }, 1000);
+  }
+
+  if(sd.type==="phys" || sd.type==="magic"){
+    const atkStat = sd.type==="magic" ? computeMatk() : computeAtk();
+    const isCrit  = Math.random() < G.critChance;
+    let dmg = Math.floor(atkStat * sd.dmg * (isCrit?2.0:1) * (0.9+Math.random()*0.2));
+    blog("atk","["+skName+"] "+(isCrit?"💥 CRIT! ":"")+"Dealt "+dmg+" damage!");
+    spawnFloat(window.innerWidth/2-50, window.innerHeight*0.4, "["+skName+"] "+dmg, sd.type==="magic"?"auto":"");
+    dealDmg(dmg, "skill", isCrit);
+  } else if(sd.type==="heal"){
+    const healAmt = sd.heal + G.stats.wis*6;
+    G.hp = Math.min(G.maxHp, G.hp+healAmt);
+    blog("heal","✨ "+skName+": Restored "+healAmt+" HP!");
+    spawnFloat(window.innerWidth/2, window.innerHeight*0.5, "+"+healAmt+" HP", "heal");
+  } else if(sd.type==="buff"){
+    blessedTimer = 30;
+    blog("heal","✨ Blessing active! +20% stats for 30s.");
+    const bTimer = setInterval(()=>{
+      blessedTimer--;
+      if(blessedTimer<=0) clearInterval(bTimer);
+    },1000);
+  } else if(sd.type==="debuff"){
+    blog("atk","["+skName+"] Enemy ATK reduced!");
+    if(G.enemy){
+      const em = DB.monsters[G.enemy];
+      // Temporary local modification
+      setTimeout(()=>{}, 5000);
+    }
+  } else if(sd.type==="special"){ // Steal
+    if(!G.enemy){ showToast("No enemy!"); return; }
+    const em = DB.monsters[G.enemy];
+    const chance = 25 + G.stats.lck*4;
+    if(Math.random()*100 < chance){
+      const drop = em.drops[Math.floor(Math.random()*em.drops.length)];
+      addItem(drop.id,1);
+      blog("loot","🎭 Steal! Got "+DB.items[drop.id].name+"!");
+    } else {
+      blog("sys","Steal failed.");
+    }
+  }
+
+  renderBars();
+  renderSkillsTab();
+}
+
+// ══════════════════════════════════════════════════════════
+// INVENTORY
+// ══════════════════════════════════════════════════════════
+function addItem(id, qty){
+  const ex = G.inventory.find(s=>s.id===id);
+  if(ex) ex.qty+=qty; else G.inventory.push({id,qty});
+  renderInvTab();
+}
+
+function useItem(id){
+  const slot = G.inventory.find(s=>s.id===id);
+  if(!slot||slot.qty<=0) return;
+  const it = DB.items[id];
+  if(!it||it.cat!=="Consumable") return;
+
+  if(it.effect==="healHP"){
+    G.hp = Math.min(G.maxHp, G.hp+it.val);
+    blog("heal","🧪 Used "+it.name+": +"+it.val+" HP");
+    spawnFloat(window.innerWidth/2, window.innerHeight*0.5, "+"+it.val+" HP","heal");
+  } else if(it.effect==="healSP"){
+    G.sp = Math.min(G.maxSp, G.sp+it.val);
+    blog("heal","🧪 Used "+it.name+": +"+it.val+" SP");
+  } else if(it.effect==="healBoth"){
+    G.hp = Math.min(G.maxHp, G.hp+it.val);
+    G.sp = Math.min(G.maxSp, G.sp+it.val2);
+    blog("heal","🧪 Used "+it.name+": +"+it.val+" HP, +"+it.val2+" SP");
+  }
+
+  slot.qty--;
+  if(slot.qty<=0) G.inventory = G.inventory.filter(s=>s.qty>0);
+  renderBars();
+  renderInvTab();
+}
+
+// ══════════════════════════════════════════════════════════
+// TRAVEL
+// ══════════════════════════════════════════════════════════
+function travelTo(zoneId){
+  const z = DB.zones.find(z=>z.id===zoneId);
+  if(!z) return;
+  if(G.level < z.lv){ showToast("Need Lv."+z.lv+" to enter "+z.name); return; }
+
+  G.zone = z;
+  G.wave = 1;
+  G.waveKills = 0;
+  G.waveGoal  = 5;
+  blog("sys","🗺 Traveled to "+z.name+"!");
+  document.getElementById("tLoc").textContent = z.name.toUpperCase();
+  document.getElementById("stageInfo").textContent = z.name.toUpperCase()+" — WAVE 1";
+  document.getElementById("top-loc") && (document.getElementById("top-loc").textContent = z.name.toUpperCase());
+  spawnEnemy();
+  renderAll();
+  showToast("Entered "+z.name);
+}
+
+// ══════════════════════════════════════════════════════════
+// UPGRADES
+// ══════════════════════════════════════════════════════════
+function buyUpgrade(uid){
+  const upg = DB.upgrades.find(u=>u.id===uid);
+  if(!upg) return;
+  const cur = G.upgrades[uid]||0;
+  if(cur >= upg.maxLv){ showToast("Already maxed!"); return; }
+
+  const cost = Math.floor(upg.cost * Math.pow(1.6, cur));
+  if(G.zeny < cost){ showToast("Need "+cost+" Zeny!"); return; }
+
+  G.zeny -= cost;
+  G.upgrades[uid] = cur+1;
+
+  // Apply effect
+  if(upg.effect==="atk")  { G.stats.str += 1; recomputeAtk(); }
+  if(upg.effect==="hp")   { G.maxHp += upg.val; G.hp = Math.min(G.hp+upg.val, G.maxHp); }
+  if(upg.effect==="sp")   { G.maxSp += upg.val; G.sp = Math.min(G.sp+upg.val, G.maxSp); }
+  if(upg.effect==="crit") { G.critChance = Math.min(0.7, G.critChance + upg.val); }
+  if(upg.effect==="regen"){ G.hpRegen += upg.val; }
+  if(upg.effect==="dps")  { G.dpsBonus += upg.val; }
+  if(upg.effect==="exp")  { G.expBonus += upg.val; }
+  if(upg.effect==="zeny") { G.zenyBonus += upg.val; }
+
+  blog("ev","⬆ Upgraded: "+upg.name+" (Lv."+(cur+1)+")!");
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════
+// COMMAND INPUT
+// ══════════════════════════════════════════════════════════
+function sendCmd(){
+  const v = document.getElementById("cmdIn").value.trim().toLowerCase();
+  document.getElementById("cmdIn").value="";
+  if(!v) return;
+  blog("sys","> "+v);
+
+  // POTION / HEAL
+  if(/use.*(potion|red|yellow|blue|white)/.test(v)){
+    const order = ["403","401","400","402"];
+    let used = false;
+    for(const id of order){
+      const s = G.inventory.find(s=>s.id===id);
+      if(s&&s.qty>0){ useItem(id); used=true; break; }
+    }
+    if(!used) blog("sys","No potions left!");
+    return;
+  }
+
+  // TRAVEL
+  const zmap = {prontera:"prontera","prontera field":"prontera",payon:"payon","payon forest":"payon",
+                 geffen:"geffen","geffen field":"geffen","geffen dungeon":"geffenD","geffend":"geffenD",
+                 sphinx:"sphinx","sphinx dungeon":"sphinx"};
+  for(const [k,id] of Object.entries(zmap)){
+    if(v.includes(k)){ travelTo(id); return; }
+  }
+
+  // SKILL USE
+  for(const sk of G.skills){
+    if(v.includes(sk.toLowerCase())){ useSkill(sk); return; }
+  }
+
+  // STATUS
+  if(/status|stat|info/.test(v)){
+    blog("sys","─── "+G.name+" ("+G.job+") Lv."+G.level+" ───");
+    blog("sys","HP:"+G.hp+"/"+G.maxHp+"  SP:"+G.sp+"/"+G.maxSp+"  EXP:"+G.exp+"/"+G.expMax);
+    blog("sys","ATK:"+computeAtk()+"  DEF:"+Math.floor(computeDef())+"  CRIT:"+(G.critChance*100).toFixed(0)+"%");
+    blog("sys","Zeny:"+G.zeny+"  Kills:"+G.kills+"  Wave:"+G.wave);
+    return;
+  }
+
+  // SELL ALL MATERIALS
+  if(/sell/.test(v)){
+    let total=0;
+    G.inventory = G.inventory.filter(s=>{
+      const it=DB.items[s.id];
+      if(it&&it.cat==="Material"){ total+=it.sell*s.qty; return false; }
+      return true;
+    });
+    G.zeny+=total;
+    blog("loot","Sold all materials for "+total+" Zeny.");
+    renderAll();
+    return;
+  }
+
+  blog("sys","Unknown command. Try: use potion / go to payon / sell / status");
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("cmdIn")?.addEventListener("keydown",e=>{if(e.key==="Enter")sendCmd();});
+  // Class select
+  document.querySelectorAll(".class-opt").forEach(el=>{
+    el.addEventListener("click",()=>{
+      document.querySelectorAll(".class-opt").forEach(x=>x.classList.remove("sel"));
+      el.classList.add("sel");
+    });
+  });
+});
+
+// ══════════════════════════════════════════════════════════
+// RENDERING
+// ══════════════════════════════════════════════════════════
+function renderAll(){
+  renderBars();
+  renderTopbar();
+  renderStats();
+  renderEquip();
+  renderZeny();
+  renderChar();
+  renderWaveBar();
+  if(currentTab==="skills") renderSkillsTab();
+  else if(currentTab==="inv") renderInvTab();
+  else if(currentTab==="map") renderMapTab();
+  else if(currentTab==="upg") renderUpgTab();
+}
+
+function renderBars(){
+  const pct=(v,m)=>Math.max(0,Math.min(100,(v/m)*100)).toFixed(1)+"%";
+  document.getElementById("bHp").style.width  = pct(G.hp,G.maxHp);
+  document.getElementById("bSp").style.width  = pct(G.sp,G.maxSp);
+  document.getElementById("bExp").style.width = pct(G.exp,G.expMax);
+  document.getElementById("bHpV").textContent = Math.floor(G.hp);
+  document.getElementById("bHpM").textContent = G.maxHp;
+  document.getElementById("bSpV").textContent = Math.floor(G.sp);
+  document.getElementById("bSpM").textContent = G.maxSp;
+  document.getElementById("bExpV").textContent= Math.floor(G.exp);
+  document.getElementById("bExpM").textContent= G.expMax;
+  document.getElementById("bWave").textContent= G.wave;
+}
+
+function renderWaveBar(){
+  const pct = Math.min(100,(G.waveKills/G.waveGoal)*100).toFixed(1)+"%";
+  document.getElementById("bStg").style.width = pct;
+}
+
+function renderTopbar(){
+  document.getElementById("tLv").textContent    = G.level;
+  document.getElementById("tHp").textContent    = Math.floor(G.hp);
+  document.getElementById("tDps").textContent   = Math.floor(computeAtk()*(0.7+G.dpsBonus));
+  document.getElementById("tKills").textContent = G.kills;
+  document.getElementById("tWave").textContent  = G.wave;
+  document.getElementById("tLoc").textContent   = G.zone.name.toUpperCase();
+  document.getElementById("regenVal").textContent = G.hpRegen;
+}
+
+function renderStats(){
+  const g = document.getElementById("statsGrid");
+  const labels={str:"STR",agi:"AGI",vit:"VIT",int:"INT",wis:"WIS",lck:"LCK"};
+  const primary={Swordsman:"str",Mage:"int",Archer:"agi",Acolyte:"wis",Thief:"agi",Novice:"str"};
+  g.innerHTML = Object.entries(G.stats).map(([k,v])=>
+    `<div class="sc ${k===primary[G.job]?'highlight':''}">
+      <span class="sn">${labels[k]||k}</span>
+      <span class="sv">${v}</span>
+    </div>`).join("");
+}
+
+function renderEquip(){
+  const wpn = G.equip.wpn ? DB.items[G.equip.wpn] : null;
+  const arm = G.equip.arm ? DB.items[G.equip.arm] : null;
+  document.getElementById("eWpn").textContent  = wpn?.name||"Unarmed";
+  document.getElementById("eWpnA").textContent = wpn ? "ATK "+wpn.atk : "";
+  document.getElementById("eArm").textContent  = arm?.name||"None";
+  document.getElementById("eArmA").textContent = arm ? "DEF "+arm.def : "";
+}
+
+function renderZeny(){
+  const fmt = n => n>=1e6 ? (n/1e6).toFixed(1)+"M" : n>=1e3 ? (n/1e3).toFixed(1)+"K" : n;
+  document.getElementById("zenyVal").textContent = fmt(G.zeny);
+}
+
+function renderChar(){
+  const jd = DB.jobs[G.job];
+  document.getElementById("cEmoji").textContent = jd?.e||"🧍";
+  document.getElementById("cName").textContent  = G.name;
+  document.getElementById("cClass").textContent = G.job+" · Lv."+G.level;
+}
+
+function updateEnemyBar(){
+  if(!G.enemy) return;
+  const pct = Math.max(0,(G.enemyHp/G.enemyMaxHp)*100).toFixed(1)+"%";
+  document.getElementById("eHpFill").style.width = pct;
+  document.getElementById("eHpTxt").textContent  = Math.max(0,G.enemyHp)+" / "+G.enemyMaxHp;
+}
+
+// ─── SKILLS TAB ───
+function renderSkillsTab(){
+  const el = document.getElementById("tabBody");
+  if(currentTab!=="skills") return;
+  el.innerHTML = G.skills.map(sk=>{
+    const sd = DB.skills[sk]||{};
+    const cd = skillCDs[sk]||0;
+    return `<div class="skill-row ${cd>0?'on-cd':''}" onclick="useSkill('${sk}')">
+      <div class="sk-left">
+        <div class="sk-name" style="color:${sd.color||'var(--txt2)'}">${sk}</div>
+        <div class="sk-desc">${sd.desc||""}</div>
+      </div>
+      <div class="sk-right">
+        <div class="sk-sp">${sd.sp||0} SP</div>
+        <div class="sk-cd">${cd>0?cd+"s CD":"Ready"}</div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ─── INVENTORY TAB ───
+function renderInvTab(){
+  const el = document.getElementById("tabBody");
+  if(currentTab!=="inv") return;
+  if(G.inventory.length===0){ el.innerHTML='<div class="sys" style="font-size:10px;color:var(--dim);padding:8px;">Empty</div>'; return; }
+  el.innerHTML = G.inventory.map(slot=>{
+    const it=DB.items[slot.id];
+    if(!it) return "";
+    const canUse = it.cat==="Consumable";
+    return `<div class="inv-row" onclick="${canUse?'useItem(\''+slot.id+'\')':''}">
+      <span>
+        <span class="in">${it.name}</span>
+        ${canUse?'<span class="use-tag">USE</span>':''}
+        <span class="ic"> ${it.cat}</span>
+      </span>
+      <span class="iq">×${slot.qty}</span>
+    </div>`;
+  }).join("");
+}
+
+// ─── MAP TAB ───
+function renderMapTab(){
+  const el = document.getElementById("tabBody");
+  if(currentTab!=="map") return;
+  el.innerHTML = '<div class="map-area">'+DB.zones.map(z=>{
+    const locked = G.level < z.lv;
+    const active = G.zone.id===z.id;
+    return `<div class="zone-card ${active?'active-zone':''} ${locked?'locked':''}" onclick="${!locked?'travelTo(\''+z.id+'\')':'showToast(\'Need Lv.'+z.lv+'\')'}" >
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div class="zn ${active?'active-zone':''}">${active?"● ":""}${z.name}</div>
+        <div class="zone-badge ${locked?'locked':''}">${locked?"LV "+z.lv+" LOCKED":active?"CURRENT":"Lv."+z.lv+"+"}</div>
+      </div>
+      <div class="zm">${z.desc}</div>
+      <div class="zr" style="margin-top:3px">EXP ×${z.expMult.toFixed(1)} · Zeny ×${z.zenyMult.toFixed(1)}</div>
+    </div>`;
+  }).join("")+'</div>';
+}
+
+// ─── UPGRADES TAB ───
+function renderUpgTab(){
+  const el = document.getElementById("tabBody");
+  if(currentTab!=="upg") return;
+  el.innerHTML = DB.upgrades.map(u=>{
+    const cur  = G.upgrades[u.id]||0;
+    const cost = Math.floor(u.cost*Math.pow(1.6,cur));
+    const maxed= cur>=u.maxLv;
+    const canB = !maxed && G.zeny>=cost;
+    return `<div class="upg-card ${canB?'can-buy':''} ${maxed?'maxed':''}" onclick="${!maxed?'buyUpgrade(\''+u.id+'\')':''}">
+      <div style="display:flex;justify-content:space-between">
+        <div class="un">${u.name}</div>
+        <div class="ul">Lv.${cur}/${u.maxLv}</div>
+      </div>
+      <div class="ud">${u.desc}</div>
+      <div class="ub">${maxed?"MAXED":cost+" Zeny"}</div>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════
+function showTab(tab){
+  currentTab=tab;
+  document.querySelectorAll(".tab").forEach((el,i)=>{
+    const tabs=["skills","inv","map","upg"];
+    el.classList.toggle("active", tabs[i]===tab);
+  });
+  if(tab==="skills") renderSkillsTab();
+  else if(tab==="inv") renderInvTab();
+  else if(tab==="map") renderMapTab();
+  else if(tab==="upg") renderUpgTab();
+}
+
+// ══════════════════════════════════════════════════════════
+// BATTLE LOG
+// ══════════════════════════════════════════════════════════
+function blog(type, msg){
+  const log = document.getElementById("battleLog");
+  const d   = document.createElement("div");
+  const ts  = new Date().toLocaleTimeString("en",{hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  d.className = "blog "+type;
+  d.innerHTML = `<span class="ts">${ts}</span>${msg}`;
+  log.appendChild(d);
+  // Keep only last 60 lines
+  while(log.children.length>60) log.removeChild(log.firstChild);
+  log.scrollTop=log.scrollHeight;
+}
+
+// ══════════════════════════════════════════════════════════
+// DAMAGE FLOATERS
+// ══════════════════════════════════════════════════════════
+function spawnFloat(x, y, text, cls){
+  const d = document.createElement("div");
+  d.className="dmg-float "+(cls||"");
+  d.textContent=text;
+  d.style.left=(x-30)+"px";
+  d.style.top =(y-20)+"px";
+  document.body.appendChild(d);
+  d.addEventListener("animationend",()=>d.remove());
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;
+  t.style.opacity="1";
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.style.opacity="0", 2000);
+}
+</script>
+</body>
+</html>
